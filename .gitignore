@@ -1,3 +1,10 @@
+# IDE
+.vscode
+
+# Build directory
+rmi_system/build/*
+!rmi_system/build/.keep
+
 # Prerequisites
 *.d
 
