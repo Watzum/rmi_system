@@ -2,4 +2,6 @@
 ** [Unreleased]
 ** [0.0.1] - 2022-02-21
 *** Added 
-- "Hello World" project according to the template
+- Create "Hello World" project according to the template
+- Fill .gitignore
+- Create Boost license 
