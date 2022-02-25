@@ -1,0 +1,126 @@
+%% Basierend auf einer TeXnicCenter-Vorlage von Tino Weinkauf.
+
+\documentclass[a4paper,oneside,10pt]{report}
+
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Java,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+
+\usepackage[ngerman]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[ansinew]{inputenc}
+\usepackage[hidelinks]{hyperref}
+\hypersetup{
+	colorlinks=false,
+	allcolors=black
+}
+
+\usepackage{lmodern} 
+
+\usepackage[backend=biber]{biblatex}
+
+\addbibresource{literatur.bib}
+
+\usepackage{graphicx}
+
+\graphicspath{{images/}}    % Bilderverzeichnis
+
+
+%% Packages für Formeln %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\usepackage{amsmath}
+%\usepackage{amsthm}
+%\usepackage{amsfonts}
+
+
+
+\begin{document}
+
+\pagestyle{empty} 
+
+\title{Entwicklung eines Remote Method Invocation Systems}
+\author{Emil Watz}
+\maketitle
+
+\tableofcontents 
+\cleardoublepage 
+
+\pagestyle{plain} 
+
+
+
+\chapter{Anforderungen an das System}
+
+\section{Verbindung des Server-Objekts mit dem Client-Objekt}
+
+Es können mehrere Server-Objekte erstellt werden, deren Funktionen über das Netzwerk aufrufbar sind. Der Client kann sich mit einem der Server-Objekte verbinden. Es muss daher ein Mechanismus entwickelt werden, der die Auswahl eines Server-Objekts ermöglicht. Diese Auswahl geschieht über einen Namensdienst (siehe \ref{anf_namensdienst}).
+
+\section{Entferntes Aufrufen}
+
+Ein Client soll Funktionen am Server aufrufen können, dieser Funktionsaufruf soll sich aber gleich Verhalten, wie ein lokaler Aufruf. Der Rückgabewert muss also vom Server zurück an den Client gesendet werden. Es können auch Parameter vom Client an den Server mitgegeben werden. Es muss auch eine Lösung für Exceptions geben. 
+Außerdem muss ein Verhalten für den Verbindungsabbruch definiert werden. Weiters muss auch beachtet werden, dass Funktionen überladen werden können. 
+
+\subsection{Benutzerdefinierte Typen}
+
+Es können auch, sofern möglich, benutzerdefinierte Typen als Rückgabe- und Parameter verwendet werden, sowohl der Server, als auch der Client müssen natürlich über diesen Typen verfügen. Hierbei muss wieder eine Fehlerbehandlung erfolgen. Die Definition von benutzerdefinierten Typen muss als Protocol Buffer erfolgen!
+
+\section{gRPC-Einsatz}\label{anf_namensdienst}
+
+Zusätzlich zu dem RMI-System soll auch noch gRPC eingesetzt werden. Dieser Einsatz wird im Rahmen eines Namensdienstes implementiert. Mit dem Service können Server-Objekte unter einem bestimmten Namen angemeldet werden. Clients können dann über den Namen bestimmte Objekte ansprechen und deren Funktionen aufrufen. 
+
+\section{Optionale Anforderungen}
+
+Eine optionale Anforderung an das System, welche die Bedienung wesentlich erleichtern würde, ist die (teilweise) automatische Generierung des Client-Stubs und des Server-Skeletons. 
+
+
+\addtocontents{toc}{\protect\vspace*{\baselineskip}}
+
+%% Literaturverzeichnis
+%% ==> Eine Datei 'literatur.bib' wird hierfür benötigt.
+%% ==> Sie müssen hierfür BibTeX verwenden (Projekt | Eigenschaften... | BibTeX)
+%\addcontentsline{toc}{chapter}{Literaturverzeichnis}
+%\nocite{*} %Auch nicht-zitierte BibTeX-Einträge werden angezeigt.
+%\bibliographystyle{alpha} %Art der Ausgabe: plain / apalike / amsalpha / ...
+%\bibliography{literatur} %Eine Datei 'literatur.bib' wird hierfür benötigt.
+
+%% Abbildungsverzeichnis
+%%\clearpage
+%%\addcontentsline{toc}{chapter}{Abbildungsverzeichnis}
+%%\listoffigures
+
+%% Tabellenverzeichnis
+%%\clearpage
+%%\addcontentsline{toc}{chapter}{Tabellenverzeichnis}
+%%\listoftables
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ANHÄNGE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%\appendix
+%% ==> Schreiben Sie hier Ihren Text oder fügen Sie externe Dateien ein.
+
+%\input{Dateiname} %Eine Datei 'Dateiname.tex' wird hierfür benötigt.
+
+
+\end{document}

@@ -5,6 +5,12 @@
 rmi_system/build/*
 !rmi_system/build/.keep
 
+# docs
+
+doc/*
+!doc/*.tex
+!doc/*.pdf
+
 # Prerequisites
 *.d
 
