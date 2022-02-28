@@ -205,6 +205,29 @@ Der Namensdienst leitet Aufrufe vom Client an die entsprechende Skeleton-Klasse 
 
 Der Namensdienst erweitert eine gRPC-Klasse, welche die Methoden doesObjectExist und callMethodOfObject deklariert. Der Parameter der doesObjectExist ist ein Protokoll Buffer mit einem String-Attribute, nämlich dem Namen. Zurückgeliefert wird ein Protokoll Buffer mit einem boolschen Wert. Die zweite Methode callMethodObject wird mit dem Protokoll Buffer, der bei der Serialisierung im Client-Stub verwendet wird, aufgerufen. Sie gibt den Protokoll Buffer an das zugehörige Skeleton-Objekt weiter. Die Funktion liefert einen Protokoll Buffer zurück, der den Rückgabewert enthält. (Siehe TODO: serialisierung des rückgabewerts)
 
+\subsection{Deserialisierung des Funktionsaufrufes}
+
+Für die Umwandlung des Serialisierten Funktionsaufrufes ist die serverseitige Skeleton-Klasse zuständig. Dabei wird mit Makros gearbeitet, um dem Benutzer die Angabe der Funktionen, so weit wie möglich, zu erleichtern. 
+
+Der \_\_FUNCTION\_DEF\_\_ Makro wandelt den Namen der Funktion in einen wirklichen Aufruf um. Außerdem gibt es noch den \_\_ARGUMENT\_\_ Makro, welcher die Parameter \emph{Typ}, welche den Datentyp des Parameters angibt, und \emph{Position}, welche die Position des Parameters angibt (1 => erster Parameter, 2 => zweiter, etc.). Der Datentyp und die Position der Parameter werden benötigt, damit diese aus dem Json-Objekt ausgelesen werden können, welches in dem serialisierten Funktionsaufruf mitgesendet werden. 
+Wenn es keinen Parameter gibt, muss der Makro \_\_NO\_ARGUMENTS\_\_ angegeben werden. 
+
+Der folgende Aufruf eines Makros gibt die Funktion method2, mit einem Integer-Parameter an erster Stelle und einem String-Parameter an zweiter, an.
+
+\begin{lstlisting}
+__FUNCTION_DEF__(method2, __ARGUMENT__(int, 1), __ARGUMENT__(string, 2));
+\end{lstlisting}
+
+Die Definition der Makros sieht folgendermaßen aus: 
+
+\begin{lstlisting}
+#define __ARGUMENT__(type, position) jsonObject["parameters"][position].get<type>()
+#define __FUNCTION_DEF__(name, ...) if (functionName == #name) name(__VA_ARGS__)
+#define __NO_ARGUMENTS__ 
+\end{lstlisting}
+
+
+
 \addtocontents{toc}{\protect\vspace*{\baselineskip}}
 
 %% Literaturverzeichnis
