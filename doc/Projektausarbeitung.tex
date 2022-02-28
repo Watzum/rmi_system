@@ -38,9 +38,9 @@
 
 \usepackage{lmodern} 
 
-\usepackage[backend=biber]{biblatex}
+%\usepackage[backend=biber]{biblatex}
 
-\addbibresource{literatur.bib}
+%\addbibresource{literatur.bib}
 
 \usepackage{graphicx}
 
@@ -84,7 +84,7 @@ Außerdem muss ein Verhalten für den Verbindungsabbruch definiert werden. Weiters
 
 Es können auch, sofern möglich, benutzerdefinierte Typen als Rückgabe- und Parameter verwendet werden, sowohl der Server, als auch der Client müssen natürlich über diesen Typen verfügen. Hierbei muss wieder eine Fehlerbehandlung erfolgen. Die Definition von benutzerdefinierten Typen muss als Protocol Buffer erfolgen!
 
-\section{gRPC-Einsatz}\label{anf_namensdienst}
+\section{gRPC-Einsatz}
 
 Zusätzlich zu dem RMI-System soll auch noch gRPC eingesetzt werden. Dieser Einsatz wird im Rahmen eines Namensdienstes implementiert. Mit dem Service können Server-Objekte unter einem bestimmten Namen angemeldet werden. Clients können dann über den Namen bestimmte Objekte ansprechen und deren Funktionen aufrufen. 
 
@@ -92,6 +92,43 @@ Zusätzlich zu dem RMI-System soll auch noch gRPC eingesetzt werden. Dieser Einsa
 
 Eine optionale Anforderung an das System, welche die Bedienung wesentlich erleichtern würde, ist die (teilweise) automatische Generierung des Client-Stubs und des Server-Skeletons. 
 
+\chapter{Umsetzung}
+
+\section{Klassendiagram}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=12cm]{class_diagram}
+\caption[My Caption]{Klassendiagram des RMI Systems}
+\end{figure} 
+
+\subsection{Abstrakte Klasse (AbstractClass)}
+
+Die meisten Remote Method Invocation Systeme verwenden ein Interface, um die Methoden zu definieren. Da es in C++ keine Interfaces gibt, wird daher eine abstrakte Klasse verwendet, welche eine Anzahl an virtuellen ("`virtual"') Funktionen deklariert.
+
+Diese Methodendeklaration müssen vor der Benutzung vom User erstellt werden. Im Klassendiagramm werden die Beispielfunktionen "`method1"', "`method2"' verwendet
+
+\subsection{Client Stub}
+
+Die \emph{Client Stub}-Klasse erbt von der abstrakten Klasse. Die Implementierungen der virtuellen Funktionen, senden einen Funktionsaufruf an die Skeleton-Klasse des Servers. Den Rückgabewert oder die Exception erhält der Client Stub in serialisierter Form wieder vom Skeleton am Server. 
+
+\subsection{Remote Object}
+
+Das Remote Object enthält ein Template für die Funktion "`sendFunctionCall"', welches die Parameter in einen Protokoll Buffer umwandelt und an den Naming-Service sendet. 
+
+\subsection{Skeleton-Klasse am Server}
+
+Die Skeleton-Klasse am Server implementiert die benutzerdefinierte abstrakte Klasse. Die Implementierungen der virtuellen Funktionen wandeln die "`Funktionsaufruf-Nachrichten"', die vom Client Stub gesendet werden, in "`echte"' Funktionsaufrufe der Serverklasse um. Die Rückgabewerte und Exceptions, welche die Funktionen der Serverklasse zurück
+
+\subsection{Serverklasse}
+
+Auch die Serverklasse implementiert die abstrakte Klasse. Die Implementierung der virtuellen Funktionen enthält in dieser Klasse die wirkliche Funktionslogik. 
+
+\subsection{Client}
+
+Der Client ist eine Klasse die komplett vom Benutzer konfiguriert werden kann. Zur Verwendung des Remote Method Invocation System benötigt er eine Instanz des Client Stubs. 
+
+\subsection{Naming-Service} Der Naming-Service speichert alle Namen der Objekte, die bei dem Service registriert wurden. Er basiert auf gRPC und erweitert dadurch eine gRPC-Klasse. Objekte können mit einem Namen registriert werden, unter dem sie Funktionen bereitstellen können. 
 
 \addtocontents{toc}{\protect\vspace*{\baselineskip}}
 
