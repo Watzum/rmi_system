@@ -197,6 +197,14 @@ int method1(int arg1, string arg2) {
 
 Der Rückgabewert, der vom Server wieder an den Client gesendet wird, muss am Client wieder deserialisiert werden. TODO: Konzept entwickeln...
 
+\subsection{Namensdienst}
+
+Der Namensdienst leitet Aufrufe vom Client an die entsprechende Skeleton-Klasse weiter. Um ein Objekt beim Namensdienst anzumelden, muss die Funktion \textbf{addObject} mit einem Namen und einer Referenz auf die Klasse aufgerufen werden. Ein Objekt kann wieder entfernt werden, indem die Funktion \textbf{removeObject} mit dem Namen aufgerufen wird. 
+
+\subsubsection{gRPC-Funktionen}
+
+Der Namensdienst erweitert eine gRPC-Klasse, welche die Methoden doesObjectExist und callMethodOfObject deklariert. Der Parameter der doesObjectExist ist ein Protokoll Buffer mit einem String-Attribute, nämlich dem Namen. Zurückgeliefert wird ein Protokoll Buffer mit einem boolschen Wert. Die zweite Methode callMethodObject wird mit dem Protokoll Buffer, der bei der Serialisierung im Client-Stub verwendet wird, aufgerufen. Sie gibt den Protokoll Buffer an das zugehörige Skeleton-Objekt weiter. Die Funktion liefert einen Protokoll Buffer zurück, der den Rückgabewert enthält. (Siehe TODO: serialisierung des rückgabewerts)
+
 \addtocontents{toc}{\protect\vspace*{\baselineskip}}
 
 %% Literaturverzeichnis
