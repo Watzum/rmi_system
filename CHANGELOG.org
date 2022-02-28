@@ -1,7 +1,12 @@
 * Changelog
 ** [Unreleased]
+** [0.0.2] - 2022-02-28
+*** Added
+- Konzept für die Serialisierung & Deserialisierung der Funktionsaufrufe
+- Ein erstes Klassendiagram mit Beschreibung
+- Beschreibung der Anforderungen an das Projekt ("doc" Ordner)
 ** [0.0.1] - 2022-02-21
 *** Added 
-- Create "Hello World" project according to the template
-- Fill .gitignore
-- Create Boost license 
+- Ein leeres Projekt gemäß der Vorlage
+- Konfiguration der .gitignore-Datei
+- Lizenz mit der Boost-Lizenz
