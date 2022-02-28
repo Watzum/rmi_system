@@ -130,6 +130,72 @@ Der Client ist eine Klasse die komplett vom Benutzer konfiguriert werden kann. Z
 
 \subsection{Naming-Service} Der Naming-Service speichert alle Namen der Objekte, die bei dem Service registriert wurden. Er basiert auf gRPC und erweitert dadurch eine gRPC-Klasse. Objekte können mit einem Namen registriert werden, unter dem sie Funktionen bereitstellen können. 
 
+\section{Implementierung des Klassendiagrams}
+
+Nun fehlen aber noch viele wichtige Implementationsdetails. In den nächsten Abschnitten wird ein Konzept wichtiger Teile des Systems näher beschrieben. 
+
+\subsection{Senden des Funktionsaufrufs}
+
+Der Funktionsaufruf muss in irgendeiner Form serialisiert werden. Als Basis bietet sich ein Protokoll Buffer an. Dieser speichert:
+\begin{enumerate}
+	\item Den Namen des Objekts, dessen Methode aufgerufen wird
+	\item Den Namen der Methode, die Aufgerufen wird
+	\item Die Parameter, welche mitgeliefert werden
+\end{enumerate}
+
+\subsubsection{Serialisierung}
+
+Der letzte Punkt ist bei der Implementierung der schwierigste, da die Anzahl und die Typen der Parameter nicht fix sind. Die Parameter werden daher als JSON-String gespeichert. Die .proto Datei sind danach folgendermaßen aus: 
+
+\begin{lstlisting}
+syntax = "proto3";
+
+package examplePkg;
+
+message functionCall {
+    required string objectName = 1;
+    required string functionName = 1;
+    
+    optional string parametersInJson = 1;
+}
+\end{lstlisting}
+
+\subsubsection{Senden der Daten}
+
+Das Erstellen einer Funktion zum Senden der Daten ist wiederum kompliziert, weil die Parameteranzahl variabel ist und der Funktionsname in einen String verwandelt werden muss. Umgesetzt wird das mit einer Superklasse, die jeder Client-Stub erweitern muss. Diese Klasse hat eine Template-Funktion, deren Parametertypen variabel sind und dessen Parameteranzahl beliebig wählbar ist. Der Funktionsname kann durch den Makro \_\_func\_\_ als "`const char array"' übergeben werden. Der Code einer Funktion im Client-Stub könnte folgendermaßen aussehen:
+
+\begin{lstlisting}
+class ClientStub : public RemoteObject {
+    public: 
+    
+    void method1(string s, int i) {
+        RemoteObject::sendFunctionCall(__func__, s, i);
+    }
+		
+		...
+};
+\end{lstlisting}
+
+\paragraph{Vereinfachung mithilfe von Makros}
+
+Der Funktionsaufruf der sendFunctionCall Methode kann weiter mit der Definition eines Makros vereinfach werden. Ein Beispielmakro ist Folgender: 
+
+\begin{lstlisting}
+// Definition des Makros
+#define __SEND_FUNCTION_CALL__(...) return sendFunctionCall(__func__, __VA_ARGS__);
+
+...
+
+//Einsatz des Makros in der Funktion
+int method1(int arg1, string arg2) {
+	__SEND_FUNCTION_CALL__(arg1, arg2)
+}
+\end{lstlisting}
+
+\subsubsection{Empfangen des Returnwerts}
+
+Der Rückgabewert, der vom Server wieder an den Client gesendet wird, muss am Client wieder deserialisiert werden. TODO: Konzept entwickeln...
+
 \addtocontents{toc}{\protect\vspace*{\baselineskip}}
 
 %% Literaturverzeichnis
