@@ -106,7 +106,8 @@ Eine optionale Anforderung an das System, welche die Bedienung wesentlich erleic
 
 Die meisten Remote Method Invocation Systeme verwenden ein Interface, um die Methoden zu definieren. Da es in C++ keine Interfaces gibt, wird daher eine abstrakte Klasse verwendet, welche eine Anzahl an virtuellen ("`virtual"') Funktionen deklariert.
 
-Diese Methodendeklaration müssen vor der Benutzung vom User erstellt werden. Im Klassendiagramm werden die Beispielfunktionen "`method1"', "`method2"' verwendet
+Diese müssen vom Benutzer erstellt werden. Er definiert die Methoden, welche über das Netzwerk aufgerufen werden können. Sowohl der Client, als auch der Server müssen logischerweise die gleiche abstrakte Klasse erweitern. Diese Bedingung muss vom Benutzer selbst erfüllt und überprüft werden, da es keine (einfache) Möglichkeit gibt, die zwei Klassen (übers Netzwerk) in C++ zu vergleichen.
+Im Klassendiagramm werden die Beispielfunktionen "`method1"', "`method2"' verwendet
 
 \subsection{Client Stub}
 
