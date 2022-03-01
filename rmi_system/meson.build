@@ -14,10 +14,10 @@ add_global_arguments('-DASIO_NO_DEPRECATED', language : 'cpp')
 # end asio
 
 # CLI11: https://github.com/CLIUtils/CLI11
-add_global_arguments('-I' + get_option('cli11_include_dir'), language : 'cpp')
+#add_global_arguments('-I' + get_option('cli11_include_dir'), language : 'cpp')
 
 # spdlog: https://github.com/gabime/spdlog
-add_global_arguments('-I' + get_option('spdlog_include_dir'), language : 'cpp')
+#add_global_arguments('-I' + get_option('spdlog_include_dir'), language : 'cpp')
 
 # json: https://github.com/nlohmann/json
 #add_global_arguments('-I' + get_option('json_include_dir'), language : 'cpp')
@@ -40,11 +40,19 @@ add_global_arguments('-I' + get_option('spdlog_include_dir'), language : 'cpp')
 # subdir('SUBDIR1')
 
 inc_dir = include_directories('include')
-src = ['src/main.cpp']
+client_src = ['src/client/main.cpp']
+server_src = ['src/server/main.cpp']
 #protobuf: src = ['src/main.cpp', generated]
 
-executable('rmi_system',
-           sources : src,
+executable('client',
+           sources : client_src,
            include_directories : inc_dir,
 #           dependencies : [thread_dep, protobuf_dep]
           )
+
+executable('server',
+           sources : server_src,
+           include_directories : inc_dir,
+#           dependencies : [thread_dep, protobuf_dep]
+          )
+
