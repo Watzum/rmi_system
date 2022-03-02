@@ -40,7 +40,9 @@ add_global_arguments('-I' + get_option('json_include_dir'), language : 'cpp')
 # subdir('SUBDIR1')
 
 inc_dir = include_directories('include')
-client_src = ['src/client/main.cpp']
+
+rmi_src = ['src/rmi/remoteFunctionCaller.cpp']
+client_src = ['src/client/main.cpp', rmi_src]
 server_src = ['src/server/main.cpp']
 #protobuf: src = ['src/main.cpp', generated]
 
