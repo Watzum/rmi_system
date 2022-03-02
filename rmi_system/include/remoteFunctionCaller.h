@@ -13,7 +13,9 @@ class RemoteFunctionCaller {
     
   private: 
 
+    void setEndpoint(std::string ip_address, unsigned short port);
     void printEndpoint();
 
     asio::ip::tcp::endpoint server_endpoint;
+    asio::error_code endpoint_error;
 };

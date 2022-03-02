@@ -15,5 +15,8 @@ int main(int argc, char* argv[]) {
 
     spdlog::info("Client is now ready!");
 
-    RemoteFunctionCaller rfc01;
+    RemoteFunctionCaller rfc00;
+    RemoteFunctionCaller rfc01{"abcde"};
+    RemoteFunctionCaller rfc02{"abcde", 1153};
+    RemoteFunctionCaller rfc03{"10.0.0.1"};
 }
