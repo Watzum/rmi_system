@@ -73,7 +73,7 @@
 
 \section{Verbindung des Server-Objekts mit dem Client-Objekt}
 
-Es können mehrere Server-Objekte erstellt werden, deren Funktionen über das Netzwerk aufrufbar sind. Der Client kann sich mit einem der Server-Objekte verbinden. Es muss daher ein Mechanismus entwickelt werden, der die Auswahl eines Server-Objekts ermöglicht. Diese Auswahl geschieht über einen Namensdienst (siehe \ref{anf_namensdienst}).
+Es kann ein Objekt erstellt werden, deren Funktionen über das Netzwerk aufrufbar sind. Der Client kann sich mit einem Serverobjekt verbinden, damit er dessen Funktionen aufrufen kann. 
 
 \section{Entferntes Aufrufen}
 
@@ -86,7 +86,7 @@ Es können auch, sofern möglich, benutzerdefinierte Typen als Rückgabe- und Param
 
 \section{gRPC-Einsatz}
 
-Zusätzlich zu dem RMI-System soll auch noch gRPC eingesetzt werden. Dieser Einsatz wird im Rahmen eines Namensdienstes implementiert. Mit dem Service können Server-Objekte unter einem bestimmten Namen angemeldet werden. Clients können dann über den Namen bestimmte Objekte ansprechen und deren Funktionen aufrufen. 
+Der Einsatz von gRPC wird mithilfe einer Konfigurationsklasse realisiert. Diese kann das Verhalten des Server - zum Beispiel die Art oder das Format der Kommunikation - einstellen. 
 
 \section{Optionale Anforderungen}
 
@@ -113,9 +113,9 @@ Im Klassendiagramm werden die Beispielfunktionen "`method1"', "`method2"' verwen
 
 Die \emph{Client Stub}-Klasse erbt von der abstrakten Klasse. Die Implementierungen der virtuellen Funktionen, senden einen Funktionsaufruf an die Skeleton-Klasse des Servers. Den Rückgabewert oder die Exception erhält der Client Stub in serialisierter Form wieder vom Skeleton am Server. 
 
-\subsection{Remote Object}
+\subsection{Remote-Function-Caller}
 
-Das Remote Object enthält ein Template für die Funktion "`sendFunctionCall"', welches die Parameter in einen Protokoll Buffer umwandelt und an den Naming-Service sendet. 
+Der Remote-Function-Caller enthält ein Template für die Funktion "`sendFunctionCall"', welches die Parameter in einen Protokoll Buffer umwandelt und an das Server-Skeleton sendet. 
 
 \subsection{Skeleton-Klasse am Server}
 
@@ -129,8 +129,9 @@ Auch die Serverklasse implementiert die abstrakte Klasse. Die Implementierung de
 
 Der Client ist eine Klasse die komplett vom Benutzer konfiguriert werden kann. Zur Verwendung des Remote Method Invocation System benötigt er eine Instanz des Client Stubs. 
 
-\subsection{Naming-Service} Der Naming-Service speichert alle Namen der Objekte, die bei dem Service registriert wurden. Er basiert auf gRPC und erweitert dadurch eine gRPC-Klasse. Objekte können mit einem Namen registriert werden, unter dem sie Funktionen bereitstellen können. 
+\subsection{Configurator-Klasse} 
 
+Die Configurator-Klasse soll mittel gRPC implementiert werden. Sie soll dem Client ermöglichen, den Server zu konfigurieren und Daten von ihm abzufragen. Zum Beispiel, in dem eingestellt werden kann, dass Exceptions zurückgeliefert werden, oder es können Statistiken abgerufen werden (z.B. die Anzahl der Aufrufe pro Funktion). Ein weiterer potentieller Anwendungsfall ist die Rückgabe der Funktionsnamen, -parameter und -rückgabewerte. Diese können zum Beispiel für die automatische Generierung des Client-Stubs verwendet werden. 
 \section{Implementierung des Klassendiagrams}
 
 Nun fehlen aber noch viele wichtige Implementationsdetails. In den nächsten Abschnitten wird ein Konzept wichtiger Teile des Systems näher beschrieben. 
@@ -166,11 +167,11 @@ message functionCall {
 Das Erstellen einer Funktion zum Senden der Daten ist wiederum kompliziert, weil die Parameteranzahl variabel ist und der Funktionsname in einen String verwandelt werden muss. Umgesetzt wird das mit einer Superklasse, die jeder Client-Stub erweitern muss. Diese Klasse hat eine Template-Funktion, deren Parametertypen variabel sind und dessen Parameteranzahl beliebig wählbar ist. Der Funktionsname kann durch den Makro \_\_func\_\_ als "`const char array"' übergeben werden. Der Code einer Funktion im Client-Stub könnte folgendermaßen aussehen:
 
 \begin{lstlisting}
-class ClientStub : public RemoteObject {
+class ClientStub : public RemoteFunctionCaller {
     public: 
     
     void method1(string s, int i) {
-        RemoteObject::sendFunctionCall(__func__, s, i);
+        RemoteFunctionCaller::sendFunctionCall(__func__, s, i);
     }
 		
 		...
@@ -196,14 +197,6 @@ int method1(int arg1, string arg2) {
 \subsubsection{Empfangen des Returnwerts}
 
 Der Rückgabewert, der vom Server wieder an den Client gesendet wird, muss am Client wieder deserialisiert werden. TODO: Konzept entwickeln...
-
-\subsection{Namensdienst}
-
-Der Namensdienst leitet Aufrufe vom Client an die entsprechende Skeleton-Klasse weiter. Um ein Objekt beim Namensdienst anzumelden, muss die Funktion \textbf{addObject} mit einem Namen und einer Referenz auf die Klasse aufgerufen werden. Ein Objekt kann wieder entfernt werden, indem die Funktion \textbf{removeObject} mit dem Namen aufgerufen wird. 
-
-\subsubsection{gRPC-Funktionen}
-
-Der Namensdienst erweitert eine gRPC-Klasse, welche die Methoden doesObjectExist und callMethodOfObject deklariert. Der Parameter der doesObjectExist ist ein Protokoll Buffer mit einem String-Attribute, nämlich dem Namen. Zurückgeliefert wird ein Protokoll Buffer mit einem boolschen Wert. Die zweite Methode callMethodObject wird mit dem Protokoll Buffer, der bei der Serialisierung im Client-Stub verwendet wird, aufgerufen. Sie gibt den Protokoll Buffer an das zugehörige Skeleton-Objekt weiter. Die Funktion liefert einen Protokoll Buffer zurück, der den Rückgabewert enthält. (Siehe TODO: serialisierung des rückgabewerts)
 
 \subsection{Deserialisierung des Funktionsaufrufes}
 
