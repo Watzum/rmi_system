@@ -2,9 +2,11 @@
 #include <asio.hpp>
 #include "CLI11.hpp"
 #include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
 
 using namespace std;
 using namespace asio;
+using json = nlohmann::json;
 
 int main(int argc, char* argv[]) {
     //CLI11
@@ -18,5 +20,11 @@ int main(int argc, char* argv[]) {
 
     //spdlog
     spdlog::info("Welcome to spdlog!");
-    spdlog::error("An error occured...!!!");
+    spdlog::error("An error occured...!!!"); 
+
+    //json 
+    json j;
+    j["pi"] = 3.1415;
+    j["happy"] = true;
+    cout << j.dump() << endl;
 }
