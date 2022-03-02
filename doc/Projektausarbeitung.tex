@@ -113,9 +113,9 @@ Im Klassendiagramm werden die Beispielfunktionen "`method1"', "`method2"' verwen
 
 Die \emph{Client Stub}-Klasse erbt von der abstrakten Klasse. Die Implementierungen der virtuellen Funktionen, senden einen Funktionsaufruf an die Skeleton-Klasse des Servers. Den Rückgabewert oder die Exception erhält der Client Stub in serialisierter Form wieder vom Skeleton am Server. 
 
-\subsection{Remote Object}
+\subsection{Remote-Function-Caller}
 
-Das Remote Object enthält ein Template für die Funktion "`sendFunctionCall"', welches die Parameter in einen Protokoll Buffer umwandelt und an das Server-Skeleton sendet. 
+Der Remote-Function-Caller enthält ein Template für die Funktion "`sendFunctionCall"', welches die Parameter in einen Protokoll Buffer umwandelt und an das Server-Skeleton sendet. 
 
 \subsection{Skeleton-Klasse am Server}
 
@@ -167,11 +167,11 @@ message functionCall {
 Das Erstellen einer Funktion zum Senden der Daten ist wiederum kompliziert, weil die Parameteranzahl variabel ist und der Funktionsname in einen String verwandelt werden muss. Umgesetzt wird das mit einer Superklasse, die jeder Client-Stub erweitern muss. Diese Klasse hat eine Template-Funktion, deren Parametertypen variabel sind und dessen Parameteranzahl beliebig wählbar ist. Der Funktionsname kann durch den Makro \_\_func\_\_ als "`const char array"' übergeben werden. Der Code einer Funktion im Client-Stub könnte folgendermaßen aussehen:
 
 \begin{lstlisting}
-class ClientStub : public RemoteObject {
+class ClientStub : public RemoteFunctionCaller {
     public: 
     
     void method1(string s, int i) {
-        RemoteObject::sendFunctionCall(__func__, s, i);
+        RemoteFunctionCaller::sendFunctionCall(__func__, s, i);
     }
 		
 		...
