@@ -43,7 +43,7 @@ inc_dir = include_directories('include')
 
 rmi_src = ['src/rmi/remoteFunctionCaller.cpp']
 client_src = ['src/client/main.cpp', rmi_src]
-server_src = ['src/server/main.cpp']
+server_src = ['src/server/main.cpp', 'src/rmi/skeleton.cpp']
 #protobuf: src = ['src/main.cpp', generated]
 
 executable('client',
