@@ -8,7 +8,7 @@ class Skeleton {
     
     Skeleton();
     explicit Skeleton(unsigned short port);
-    void receiveFunctionCall();
+    void listenToFunctionCalls();
 
   private: 
     

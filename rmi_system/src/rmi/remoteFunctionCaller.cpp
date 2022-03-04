@@ -5,6 +5,7 @@ file:   remoteFunctionCaller.cpp
 */
 
 #include "remoteFunctionCaller.h"
+#include "error_handler.h"
 
 #include <spdlog/spdlog.h>
 
@@ -14,22 +15,33 @@ file:   remoteFunctionCaller.cpp
 using namespace std;
 using namespace asio;
 
+inline ip::tcp::socket setUpSocket(const ip::tcp::endpoint& ep, 
+  error_code& ec) {
+    using namespace asio::ip;
+    io_context ctx;
+    tcp::socket sock{ctx};
+    sock.bind(ep, ec);
+    return sock;
+}
+
+
 void RemoteFunctionCaller::sendFunctionCall(string name) {
-    if (endpoint_error.value() != 0) {
-        spdlog::warn("Send function call cancelled because endpoint is not set");
-        return;
-    }
-    ip::tcp::iostream stream{server_endpoint};
-    if (stream) {
-        stream << name << endl;
-        string data;
-        getline(stream, data);
-        cout << data << endl;
-        stream.close();
-    } else {
-        spdlog::error("Connection to " + server_endpoint.address().to_string()
-          + " could not be established! Error message " + stream.error().message());
-    }
+    using namespace asio::ip;
+    eclog::warn("Send function call cancelled because\
+          endpoint is not set", endpoint_error);
+    error_code ec;
+    io_context ctx;
+    tcp::socket sock{ctx};
+    sock.open(server_endpoint.protocol(), ec);
+    eclog::error("Socket konnte nicht geöffnet werden", sock, ec);
+    sock.connect(server_endpoint, ec);
+    eclog::error("Verbindung zu " + server_endpoint.address().to_string()\
+          + " konnte nicht aufgebaut werden", sock, ec);
+    std::string msg = name + '\n';
+    asio::write(sock, asio::buffer(msg, msg.length()), ec);
+    eclog::error(name + " konnte nicht gesendet werden", sock, ec);
+    spdlog::info("Funktionsaufruf: " + name + " wurde gesendet!");
+    sock.close();
 }
 
 
@@ -53,8 +65,7 @@ void RemoteFunctionCaller::setEndpoint(string ip_address,
 }
 
 
-RemoteFunctionCaller::RemoteFunctionCaller() :
-  server_endpoint{ip::make_address("127.0.0.1"), 1113} {
+RemoteFunctionCaller::RemoteFunctionCaller() {
     setEndpoint("127.0.0.1", 1113);
 }
 

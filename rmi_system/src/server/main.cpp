@@ -17,5 +17,5 @@ int main(int argc, char* argv[]) {
 
     spdlog::info("Welcome to the server!");
     Skeleton sk;
-    sk.receiveFunctionCall();
+    sk.listenToFunctionCalls();
 }
