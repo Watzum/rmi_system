@@ -13,6 +13,8 @@ class Skeleton {
 
   private: 
     
+    void serveClient(asio::ip::tcp::socket&& sock);
+    bool callFunction(std::string functionName);
     void printEndpoint();
     AbstractClass* rmi_object;
     asio::ip::tcp::endpoint my_endpoint;

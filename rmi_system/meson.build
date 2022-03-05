@@ -44,7 +44,8 @@ inc_dir = include_directories('include/rmi_system', 'include/rmi_user')
 rmi_user_client = ['src/client/main.cpp']
 rmi_system_client = ['src/rmi/remoteFunctionCaller.cpp']
 
-rmi_user_server = ['src/server/main.cpp', 'src/server/person.cpp']
+rmi_user_server = ['src/server/main.cpp', 'src/server/person.cpp', 
+  'src/server/abstractMethods.cpp']
 rmi_system_server = ['src/rmi/skeleton.cpp']
 
 rmi_server = [rmi_user_server, rmi_system_server]

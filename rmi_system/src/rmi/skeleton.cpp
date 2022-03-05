@@ -27,7 +27,7 @@ void sendMessage(ip::tcp::socket& sock, const std::string& msg,
 }
 
 
-void serveClient(ip::tcp::socket&& sock) {
+void Skeleton::serveClient(ip::tcp::socket&& sock) {
     error_code ec;
     streambuf buf;
     read_until(sock, buf, '\n', ec);
@@ -36,7 +36,8 @@ void serveClient(ip::tcp::socket&& sock) {
     std::string msg;
     std::istream is{&buf};
     getline(is, msg);
-    sendMessage(sock, "Answer", ec);
+    std::string answer = callFunction(msg) ? "called" : "nofunc";
+    sendMessage(sock, answer, ec);
     if (eclog::error("Antwort konnte nicht gesendet werden", sock, ec))
         return;
     spd::info("Nachricht gesendet: " + msg);
@@ -57,7 +58,7 @@ void Skeleton::listenToFunctionCalls() {
         acceptor.accept(sock, ec);
         if (eclog::error("Verbindung konnte nicht akzeptiert werden", 
             acceptor, sock, ec)) return;
-        std::thread t{serveClient, std::move(sock)};
+        std::thread t{&Skeleton::serveClient, this, std::move(sock)};
         t.detach();
     }
 }
