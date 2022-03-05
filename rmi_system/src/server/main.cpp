@@ -1,4 +1,5 @@
 #include "skeleton.h"
+#include "person.h"
 
 #include <asio.hpp>
 #include "CLI11.hpp"
@@ -16,6 +17,8 @@ int main(int argc, char* argv[]) {
     CLI11_PARSE(app, argc, argv);
 
     spdlog::info("Welcome to the server!");
-    Skeleton sk;
+
+    Person p;
+    Skeleton sk{&p};
     sk.listenToFunctionCalls();
 }

@@ -39,21 +39,28 @@ add_global_arguments('-I' + get_option('json_include_dir'), language : 'cpp')
 
 # subdir('SUBDIR1')
 
-inc_dir = include_directories('include')
+inc_dir = include_directories('include/rmi_system', 'include/rmi_user')
 
-rmi_src = ['src/rmi/remoteFunctionCaller.cpp']
-client_src = ['src/client/main.cpp', rmi_src]
-server_src = ['src/server/main.cpp', 'src/rmi/skeleton.cpp']
+rmi_user_client = ['src/client/main.cpp']
+rmi_system_client = ['src/rmi/remoteFunctionCaller.cpp']
+
+rmi_user_server = ['src/server/main.cpp', 'src/server/person.cpp']
+rmi_system_server = ['src/rmi/skeleton.cpp']
+
+rmi_server = [rmi_user_server, rmi_system_server]
+rmi_client = [rmi_user_client, rmi_system_client]
+
+src = [rmi_server, rmi_client]
 #protobuf: src = ['src/main.cpp', generated]
 
 executable('client',
-           sources : client_src,
+           sources : rmi_client,
            include_directories : inc_dir,
 #           dependencies : [thread_dep, protobuf_dep]
           )
 
 executable('server',
-           sources : server_src,
+           sources : rmi_server,
            include_directories : inc_dir,
 #           dependencies : [thread_dep, protobuf_dep]
           )

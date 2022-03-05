@@ -70,11 +70,13 @@ void Skeleton::printEndpoint() {
 }
 
 
-Skeleton::Skeleton() : my_endpoint{ip::tcp::v4(), 1113} {
+Skeleton::Skeleton(AbstractClass* a) 
+  : rmi_object{a}, my_endpoint{ip::tcp::v4(), 1113} {
     printEndpoint();
 }
 
 
-Skeleton::Skeleton(unsigned short port) : my_endpoint{ip::tcp::v4(), port} {
+Skeleton::Skeleton(AbstractClass* a, unsigned short port) 
+  : rmi_object{a}, my_endpoint{ip::tcp::v4(), port} {
     printEndpoint();
 }
