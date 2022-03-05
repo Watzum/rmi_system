@@ -1,4 +1,5 @@
 #include "remoteFunctionCaller.h"
+#include "personStub.h"
 
 #include <asio.hpp>
 #include "CLI11.hpp"
@@ -17,6 +18,8 @@ int main(int argc, char* argv[]) {
 
     spdlog::info("Client is now ready!");
 
-    RemoteFunctionCaller rfc00;
-    rfc00.sendFunctionCall(functionName);
+    PersonStub st;
+    st.go();
+    st.drink();
+    st.eat();
 }

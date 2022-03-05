@@ -12,7 +12,6 @@ using namespace asio;
 
 
 int main(int argc, char* argv[]) { 
-    //CLI11
     CLI::App app{"RMI Server"};
     CLI11_PARSE(app, argc, argv);
 

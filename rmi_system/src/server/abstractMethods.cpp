@@ -3,7 +3,6 @@
     return true;\
     }
 #define __END__ return false;
-//#define __END__ else std::cout << "No such function" << std::endl;
 #include "skeleton.h"
 
 bool Skeleton::callFunction(std::string functionName) {

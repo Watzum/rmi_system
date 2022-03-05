@@ -26,7 +26,7 @@ void Skeleton::serveClient(ip::tcp::socket&& sock) {
     streambuf buf;
     read_until(sock, buf, '\n', ec);
     if (eclog::error("Nachricht konnte nicht gelesen werden", sock, ec)) 
-        return; //TODO: Send error message to client!
+        return; 
     std::string msg;
     std::istream is{&buf};
     getline(is, msg);
