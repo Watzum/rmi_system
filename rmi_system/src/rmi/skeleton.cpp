@@ -21,12 +21,6 @@ inline ip::tcp::acceptor setUpAcceptor(io_context& ctx,
 }
 
 
-void sendMessage(ip::tcp::socket& sock, const std::string& msg, 
-  error_code& ec) {
-    write(sock, buffer(msg, msg.size()), ec);
-}
-
-
 void Skeleton::serveClient(ip::tcp::socket&& sock) {
     error_code ec;
     streambuf buf;
@@ -36,11 +30,19 @@ void Skeleton::serveClient(ip::tcp::socket&& sock) {
     std::string msg;
     std::istream is{&buf};
     getline(is, msg);
-    std::string answer = callFunction(msg) ? "called" : "nofunc";
-    sendMessage(sock, answer, ec);
+    spdlog::info("Funktion " + msg + " wird aufgerufen!");
+    bool functionExists = callFunction(msg);
+    std::string answer;
+    if (functionExists) {
+        answer = "called";
+    } else {
+        answer = "nofunc";
+        spdlog::warn("Funktion " + msg + " wurde nicht gefunden");
+    }
+    write(sock, buffer(answer, answer.size()), ec);
     if (eclog::error("Antwort konnte nicht gesendet werden", sock, ec))
         return;
-    spd::info("Nachricht gesendet: " + msg);
+    spd::info("Antwort gesendet: " + answer);
     sock.close();
 }
 
