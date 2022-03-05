@@ -21,7 +21,13 @@ inline ip::tcp::acceptor setUpAcceptor(io_context& ctx,
 }
 
 
-void readFromSocket(ip::tcp::socket&& sock) {
+void sendMessage(ip::tcp::socket& sock, const std::string& msg, 
+  error_code& ec) {
+    write(sock, buffer(msg, msg.size()), ec);
+}
+
+
+void serveClient(ip::tcp::socket&& sock) {
     error_code ec;
     streambuf buf;
     read_until(sock, buf, '\n', ec);
@@ -30,15 +36,11 @@ void readFromSocket(ip::tcp::socket&& sock) {
     std::string msg;
     std::istream is{&buf};
     getline(is, msg);
+    sendMessage(sock, "Answer", ec);
+    if (eclog::error("Antwort konnte nicht gesendet werden", sock, ec))
+        return;
     spd::info("Nachricht gesendet: " + msg);
-}
-
-
-void sendMessage(ip::tcp::socket& sock, const std::string& msg, 
-  error_code& ec) {
-    write(sock, buffer(msg, msg.size()), ec);
-    eclog::error("Antwort konnte nicht gesendet werden", sock, ec);
-    spd::info("Nachricht gesendet: " + msg);
+    sock.close();
 }
 
 
@@ -55,7 +57,7 @@ void Skeleton::listenToFunctionCalls() {
         acceptor.accept(sock, ec);
         if (eclog::error("Verbindung konnte nicht akzeptiert werden", 
             acceptor, sock, ec)) return;
-        std::thread t{readFromSocket, std::move(sock)};
+        std::thread t{serveClient, std::move(sock)};
         t.detach();
     }
 }
