@@ -4,49 +4,54 @@
 #include <string>
 
 namespace eclog {
-    inline void error(const std::string& s, asio::error_code& ec)  {
+    inline bool error(const std::string& s, asio::error_code& ec)  {
         if (ec.value() != 0) {
             spdlog::error(s + ": " +  ec.message());
-            throw asio::system_error(ec);
+            return true;
         }
+        return false;
     }
 
 
-    inline void error(const std::string& s, asio::ip::tcp::socket& sock, 
+    inline bool error(const std::string& s, asio::ip::tcp::socket& sock, 
     asio::error_code& ec)  {
         if (ec.value() != 0) {
             spdlog::error(s + ": " +  ec.message());
             sock.close();
-            throw asio::system_error(ec);
+            return true;
         }
+        return false;
     }
 
 
-    inline void error(const std::string& s, asio::ip::tcp::acceptor& acc, 
+    inline bool error(const std::string& s, asio::ip::tcp::acceptor& acc, 
     asio::error_code& ec)  {
         if (ec.value() != 0) {
             spdlog::error(s + ": " +  ec.message());
             acc.close();
-            throw asio::system_error(ec);
+            return true;
         }
+        return false;
     }
 
 
-    inline void error(const std::string& s, asio::ip::tcp::acceptor& acc, 
+    inline bool error(const std::string& s, asio::ip::tcp::acceptor& acc, 
     asio::ip::tcp::socket& sock, asio::error_code& ec)  {
         if (ec.value() != 0) {
             spdlog::error(s + ": " +  ec.message());
             acc.close();
             sock.close();
-            throw asio::system_error(ec);
+            return true;
         }
+        return false;
     }
 
 
-    inline void warn(const std::string& s, asio::error_code& ec)  {
+    inline bool warn(const std::string& s, asio::error_code& ec)  {
         if (ec.value() != 0) {
             spdlog::warn(s + ": " +  ec.message());
-            throw asio::system_error(ec);
+            return true;
         }
+        return false;
     }
 }

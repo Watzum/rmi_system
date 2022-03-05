@@ -33,15 +33,15 @@ void RemoteFunctionCaller::sendFunctionCall(string name) {
     io_context ctx;
     tcp::socket sock{ctx};
     sock.open(server_endpoint.protocol(), ec);
-    eclog::error("Socket konnte nicht geöffnet werden", sock, ec);
+    if (eclog::error("Socket konnte nicht geöffnet werden", sock, ec)) return;
     sock.connect(server_endpoint, ec);
-    eclog::error("Verbindung zu " + server_endpoint.address().to_string()\
-          + " konnte nicht aufgebaut werden", sock, ec);
+    if (eclog::error("Verbindung zu " + server_endpoint.address().to_string()\
+          + " konnte nicht aufgebaut werden", sock, ec)) return;
     std::string msg = name + '\n';
     asio::write(sock, asio::buffer(msg, msg.length()), ec);
-    eclog::error(name + " konnte nicht gesendet werden", sock, ec);
+    if (eclog::error(name + " konnte nicht gesendet werden", sock, ec)) return;
     spdlog::info("Funktionsaufruf: " + name + " wurde gesendet!");
-    sock.close();
+    sock.close(); 
 }
 
 

@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <string>
+#include <thread>
 
 using namespace asio;
 namespace spd = spdlog;
@@ -20,15 +21,16 @@ inline ip::tcp::acceptor setUpAcceptor(io_context& ctx,
 }
 
 
-std::string readFromSocket(ip::tcp:: socket& sock, error_code& ec) {
+void readFromSocket(ip::tcp::socket&& sock) {
+    error_code ec;
     streambuf buf;
     read_until(sock, buf, '\n', ec);
-    if (ec.value() != 0) return "";
+    if (eclog::error("Nachricht konnte nicht gelesen werden", sock, ec)) 
+        return; //TODO: Send error message to client!
     std::string msg;
     std::istream is{&buf};
     getline(is, msg);
     spd::info("Nachricht gesendet: " + msg);
-    return msg;
 }
 
 
@@ -45,18 +47,16 @@ void Skeleton::listenToFunctionCalls() {
     error_code ec; 
     io_context ctx;
     tcp::acceptor acceptor{setUpAcceptor(ctx, my_endpoint, ec)};
-    eclog::error("Acceptor konnte nicht erstellt werden", acceptor, ec);
+    if (eclog::error("Acceptor konnte nicht erstellt werden", acceptor, ec))
+        return;
     acceptor.listen();
     while (true) {
-        try {
-            tcp::socket sock{ctx};
-            acceptor.accept(sock, ec);
-            eclog::error("Verbindung konnte nicht akzeptiert werden", 
-                acceptor, sock, ec);
-            readFromSocket(sock, ec);
-            eclog::error("Nachricht konnte nicht gelesen werden", sock, ec);
-            sock.close();
-        } catch (system_error& e) {}
+        tcp::socket sock{ctx};
+        acceptor.accept(sock, ec);
+        if (eclog::error("Verbindung konnte nicht akzeptiert werden", 
+            acceptor, sock, ec)) return;
+        std::thread t{readFromSocket, std::move(sock)};
+        t.detach();
     }
 }
 
