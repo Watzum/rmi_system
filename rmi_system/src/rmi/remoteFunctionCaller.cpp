@@ -15,12 +15,16 @@ file:   remoteFunctionCaller.cpp
 using namespace asio;
 
 void handleAnswer(ip::tcp::socket& sock, error_code& ec) {
-    char reply[6];
-    size_t reply_length = asio::read(sock, asio::buffer(reply, 6), ec);
+    char reply[1];
+    asio::read(sock, asio::buffer(reply, 1), ec);
     if (ec.value() != 0) return;
-    std::cout << "reply is: ";
-    std::cout.write(reply, reply_length);
-    std::cout << '\n';
+    if (strcmp(reply, "1") == 0) {
+        spdlog::info("Funktion wurde ausgeführt!");
+    } else if (strcmp(reply, "0") == 0) {
+        spdlog::warn("Funktion konnte nicht gefunden werden!");
+    } else {
+        spdlog::error("Funktionsaufruf fehlgeschlagen!");
+    }
 }
 
 

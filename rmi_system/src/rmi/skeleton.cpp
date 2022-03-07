@@ -34,9 +34,9 @@ void Skeleton::serveClient(ip::tcp::socket&& sock) {
     bool functionExists = callFunction(msg);
     std::string answer;
     if (functionExists) {
-        answer = "called";
+        answer = "1";
     } else {
-        answer = "nofunc";
+        answer = "0";
         spdlog::warn("Funktion " + msg + " wurde nicht gefunden");
     }
     write(sock, buffer(answer, answer.size()), ec);
