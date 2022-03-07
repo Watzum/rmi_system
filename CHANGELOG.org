@@ -1,5 +1,12 @@
 * Changelog
 ** [Unreleased]
+** [0.1.0] - 2022-03-07
+*** Added 
+- Klassen für die RMI
+- Kommunikation zwischen dem Skeleton und dem Client-Stub
+- Entfernter Aufruf von Funktionen am Server, über den Client-Stub (ohne Parameter, Returnwert und Exceptions)
+*** Changed
+- Klassendiagram: Idee eines Namensdienstes wurde verworfen
 ** [0.0.2] - 2022-02-28
 *** Added
 - Konzept für die Serialisierung & Deserialisierung der Funktionsaufrufe
