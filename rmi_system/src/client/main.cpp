@@ -1,5 +1,6 @@
 #include "remoteFunctionCaller.h"
 #include "personStub.h"
+#include "dummy.pb.h"
 
 #include <asio.hpp>
 #include "CLI11.hpp"
@@ -18,8 +19,14 @@ int main(int argc, char* argv[]) {
 
     spdlog::info("Client is now ready!");
 
-    PersonStub st;
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    Dummy *d = new Dummy;
+    d->set_text("Hello World");
+    cout << d->text() << endl;
+    delete d;
+    google::protobuf::ShutdownProtobufLibrary();
+    /*PersonStub st;
     st.go();
     st.drink();
-    st.eat();
+    st.eat();*/
 }

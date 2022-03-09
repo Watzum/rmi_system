@@ -5,7 +5,7 @@ project('rmi_system', 'cpp',
         # don't change anything of the three following options!
         default_options : ['cpp_std=c++17', 'warning_level=3', 'werror=true'])
 
-# thread_dep = dependency('threads')
+thread_dep = dependency('threads')
 
 # begin asio: https://think-async.com/Asio/
 add_global_arguments('-I' + get_option('asio_include_dir'), language : 'cpp')
@@ -26,15 +26,15 @@ add_global_arguments('-I' + get_option('json_include_dir'), language : 'cpp')
 
 # # begin protobuf: https://developers.google.com/protocol-buffers/
 # # protobuf: must be installed independently and has to be found...
-# protoc = find_program('protoc', required : true)
-# protobuf_dep = dependency('protobuf', required : true)
+protoc = find_program('protoc', required : true)
+protobuf_dep = dependency('protobuf', required : true)
 
-# gen = generator(protoc, \
-#   output    : ['@BASENAME@.pb.cc', '@BASENAME@.pb.h'],
-#   arguments : ['--proto_path=@CURRENT_SOURCE_DIR@/src', '--cpp_out=@BUILD_DIR@', '@PLAINNAME@'])
+ gen = generator(protoc, \
+  output    : ['@BASENAME@.pb.cc', '@BASENAME@.pb.h'],
+  arguments : ['--proto_path=@CURRENT_SOURCE_DIR@/src', '--cpp_out=@BUILD_DIR@', '@PLAINNAME@'])
 
 # # change proto file accordingly
-# generated = gen.process('src/dummy.proto')
+ generated = gen.process('src/dummy.proto')
 # # end protobuf
 
 # subdir('SUBDIR1')
@@ -48,21 +48,21 @@ rmi_user_server = ['src/server/main.cpp', 'src/server/person.cpp',
   'src/server/abstractMethods.cpp']
 rmi_system_server = ['src/rmi/skeleton.cpp']
 
-rmi_server = [rmi_user_server, rmi_system_server]
-rmi_client = [rmi_user_client, rmi_system_client]
+rmi_server = [rmi_user_server, rmi_system_server, generated]
+rmi_client = [rmi_user_client, rmi_system_client, generated]
 
-src = [rmi_server, rmi_client]
-#protobuf: src = ['src/main.cpp', generated]
+#src = [rmi_server, rmi_client, generated]
+#src = [rmi_server, rmi_client, generated]
 
 executable('client',
            sources : rmi_client,
            include_directories : inc_dir,
-#           dependencies : [thread_dep, protobuf_dep]
+           dependencies : [thread_dep, protobuf_dep]
           )
 
 executable('server',
            sources : rmi_server,
            include_directories : inc_dir,
-#           dependencies : [thread_dep, protobuf_dep]
+           dependencies : [thread_dep, protobuf_dep]
           )
 
