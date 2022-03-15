@@ -6,6 +6,7 @@ file:   remoteFunctionCaller.cpp
 
 #include "remoteFunctionCaller.h"
 #include "error_handler.h"
+#include "functioncall.pb.h"
 
 #include <spdlog/spdlog.h>
 
@@ -27,6 +28,26 @@ void handleAnswer(ip::tcp::socket& sock, error_code& ec) {
     }
 }
 
+//TODO: Muss refaktorisiert werden
+void sendProtoBuffer(ip::tcp::socket& sock, std::string name, 
+  error_code& ec) {
+    FunctionCall* d = new FunctionCall;
+    std::cout << name << std::endl;
+    d->set_name("drink");
+    asio::streambuf buf;
+    buf.prepare(4);
+    std::ostream os(&buf);
+    uint32_t protobufLength = d->ByteSizeLong();
+    os << protobufLength;
+    std::cout << buf.size() << std::endl;
+    buf.commit(4 - buf.size());
+    size_t x = d->SerializeToOstream(&os);
+    std::cout << x << std::endl; //TODO error handling
+    std::cout << buf.size() << std::endl;
+    asio::write(sock, buf.data(), ec);
+    delete d;
+}
+
 
 void RemoteFunctionCaller::sendFunctionCall(std::string name) {
     using namespace asio::ip;
@@ -40,8 +61,7 @@ void RemoteFunctionCaller::sendFunctionCall(std::string name) {
     sock.connect(server_endpoint, ec);
     if (eclog::error("Verbindung zu " + server_endpoint.address().to_string()\
           + " konnte nicht aufgebaut werden", sock, ec)) return;
-    std::string msg = name + '\n';
-    asio::write(sock, asio::buffer(msg, msg.length()), ec);
+    sendProtoBuffer(sock, name, ec);
     if (eclog::error(name + " konnte nicht gesendet werden", sock, ec)) return;
     spdlog::info("Funktionsaufruf: " + name + " wurde gesendet!");
     handleAnswer(sock, ec);
@@ -71,16 +91,24 @@ void RemoteFunctionCaller::setEndpoint(std::string ip_address,
 
 
 RemoteFunctionCaller::RemoteFunctionCaller() {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
     setEndpoint("127.0.0.1", 1113);
 }
 
 
 RemoteFunctionCaller::RemoteFunctionCaller(std::string dest_ip_address) {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
     setEndpoint(dest_ip_address, 1113);
 }
 
 
 RemoteFunctionCaller::RemoteFunctionCaller(std::string dest_ip_address, 
   unsigned short port) {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
     setEndpoint(dest_ip_address, port);
+}
+
+
+RemoteFunctionCaller::~RemoteFunctionCaller() {
+    google::protobuf::ShutdownProtobufLibrary();
 }

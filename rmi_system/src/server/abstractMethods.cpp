@@ -5,7 +5,7 @@
 #define __END__ return false;
 #include "skeleton.h"
 
-bool Skeleton::callFunction(std::string functionName) {
+bool Skeleton::callFunction(const std::string functionName) {
     //Funktionsdeklarationen müssen mit dem __FUNCTION__ Makro angegeben werden
     __FUNCTION__(go)
     __FUNCTION__(drink)

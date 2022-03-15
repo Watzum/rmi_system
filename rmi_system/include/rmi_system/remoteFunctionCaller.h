@@ -10,6 +10,7 @@ class RemoteFunctionCaller {
     RemoteFunctionCaller();
     explicit RemoteFunctionCaller(std::string dest_ip_address);
     RemoteFunctionCaller(std::string dest_ip_address, unsigned short port);
+    ~RemoteFunctionCaller();
     void sendFunctionCall(std::string name);
     
   private: 

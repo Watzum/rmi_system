@@ -1,5 +1,6 @@
 #include "skeleton.h"
 #include "error_handler.h"
+#include "functioncall.pb.h"
 
 #include <asio.hpp>
 #include <spdlog/spdlog.h>
@@ -20,24 +21,35 @@ inline ip::tcp::acceptor setUpAcceptor(io_context& ctx,
     return acc;
 }
 
-
+//TODO: Muss refaktorisiert werden
 void Skeleton::serveClient(ip::tcp::socket&& sock) {
     error_code ec;
     streambuf buf;
-    read_until(sock, buf, '\n', ec);
+    auto bytes_transferred = read(sock, buf.prepare(4), ec);
+    buf.commit(bytes_transferred);
     if (eclog::error("Nachricht konnte nicht gelesen werden", sock, ec)) 
-        return; 
-    std::string msg;
+        return;
     std::istream is{&buf};
-    getline(is, msg);
-    spdlog::info("Funktion " + msg + " wird aufgerufen!");
-    bool functionExists = callFunction(msg);
+    uint32_t protobufLength;
+    is >> protobufLength;
+    std::cout << protobufLength << std::endl;
+    std::cout << buf.size() << std::endl;
+    buf.consume(buf.size());
+    bytes_transferred = asio::read(sock, buf.prepare(protobufLength), ec);
+    if (eclog::error("Nachricht konnte nicht gelesen werden", sock, ec)) 
+        return;
+    buf.commit(bytes_transferred);
+    std::cout << buf.size() << std::endl;
+    FunctionCall* d = new FunctionCall;
+    d->ParseFromIstream(&is); //TODO: error handling
+    spdlog::info("Funktion " + d->name() + " wird aufgerufen!");
+    bool functionExists = callFunction(d->name());
     std::string answer;
     if (functionExists) {
         answer = "1";
     } else {
         answer = "0";
-        spdlog::warn("Funktion " + msg + " wurde nicht gefunden");
+        spdlog::warn("Funktion " + d->name() + " wurde nicht gefunden");
     }
     write(sock, buffer(answer, answer.size()), ec);
     if (eclog::error("Antwort konnte nicht gesendet werden", sock, ec))
