@@ -21,7 +21,7 @@ inline ip::tcp::acceptor setUpAcceptor(io_context& ctx,
     return acc;
 }
 
-//TODO: Muss refaktorisiert werden
+
 void Skeleton::serveClient(ip::tcp::socket&& sock) {
     error_code ec;
     streambuf buf;
@@ -32,18 +32,18 @@ void Skeleton::serveClient(ip::tcp::socket&& sock) {
     std::istream is{&buf};
     uint32_t protobufLength;
     is >> protobufLength;
-    std::cout << protobufLength << std::endl;
-    std::cout << buf.size() << std::endl;
     buf.consume(buf.size());
     bytes_transferred = asio::read(sock, buf.prepare(protobufLength), ec);
     if (eclog::error("Nachricht konnte nicht gelesen werden", sock, ec)) 
         return;
     buf.commit(bytes_transferred);
-    std::cout << buf.size() << std::endl;
     FunctionCall* d = new FunctionCall;
-    d->ParseFromIstream(&is); //TODO: error handling
-    spdlog::info("Funktion " + d->name() + " wird aufgerufen!");
-    bool functionExists = callFunction(d->name());
+    bool functionExists = d->ParseFromIstream(&is);
+    if (!functionExists) {
+        delete d;
+        spdlog::error("Funktionsaufruf konnte nicht deserialisiert werden!");
+        return;
+    }
     std::string answer;
     if (functionExists) {
         answer = "1";
@@ -52,8 +52,10 @@ void Skeleton::serveClient(ip::tcp::socket&& sock) {
         spdlog::warn("Funktion " + d->name() + " wurde nicht gefunden");
     }
     write(sock, buffer(answer, answer.size()), ec);
-    if (eclog::error("Antwort konnte nicht gesendet werden", sock, ec))
+    if (eclog::error("Antwort konnte nicht gesendet werden", sock, ec)) {
+        delete d;
         return;
+    }
     spd::info("Antwort gesendet: " + answer);
     sock.close();
 }

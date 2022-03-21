@@ -28,22 +28,20 @@ void handleAnswer(ip::tcp::socket& sock, error_code& ec) {
     }
 }
 
-//TODO: Muss refaktorisiert werden
+
 void sendProtoBuffer(ip::tcp::socket& sock, std::string name, 
   error_code& ec) {
     FunctionCall* d = new FunctionCall;
-    std::cout << name << std::endl;
-    d->set_name("drink");
+    d->set_name(name);
     asio::streambuf buf;
     buf.prepare(4);
     std::ostream os(&buf);
     uint32_t protobufLength = d->ByteSizeLong();
     os << protobufLength;
-    std::cout << buf.size() << std::endl;
     buf.commit(4 - buf.size());
-    size_t x = d->SerializeToOstream(&os);
-    std::cout << x << std::endl; //TODO error handling
-    std::cout << buf.size() << std::endl;
+    size_t serializeSuccessful = d->SerializeToOstream(&os);
+    if (!serializeSuccessful)
+        spdlog::error("Funktionsaufruf konnte nicht serialisiert werden!");
     asio::write(sock, buf.data(), ec);
     delete d;
 }
