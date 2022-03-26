@@ -1,5 +1,8 @@
 * Changelog
 ** [Unreleased]
+** [0.3.0] - 2022-03-21
+*** Changed
+- Das Senden des Funktionsaufrufes basiert auf Protokoll Buffers
 ** [0.2.0] - 2022-03-14
 *** Added
 - Google Protokoll Buffer Bibliothek
