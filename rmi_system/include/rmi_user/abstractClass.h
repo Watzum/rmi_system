@@ -4,6 +4,6 @@ class AbstractClass {
   public:
     virtual ~AbstractClass() { }
     virtual void go() = 0;
-    virtual void drink() = 0;
-    virtual void eat() = 0;
+    virtual bool drink() = 0;
+    virtual int eat() = 0;
 };

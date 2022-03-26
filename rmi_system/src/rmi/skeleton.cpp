@@ -1,6 +1,7 @@
 #include "skeleton.h"
 #include "error_handler.h"
 #include "functioncall.pb.h"
+#include "returnvalue.pb.h"
 
 #include <asio.hpp>
 #include <spdlog/spdlog.h>
@@ -21,6 +22,33 @@ inline ip::tcp::acceptor setUpAcceptor(io_context& ctx,
     return acc;
 }
 
+void sendProtoBuffer(ip::tcp::socket& sock, 
+  ReturnValue* r, error_code& ec) {
+    asio::streambuf buf;
+    buf.prepare(4);
+    std::ostream os(&buf);
+    uint32_t protobufLength = r->ByteSizeLong();
+    os << protobufLength;
+    buf.commit(4 - buf.size());
+    size_t serializeSuccessful = r->SerializeToOstream(&os);
+    if (!serializeSuccessful)
+        spdlog::error("Funktionsaufruf konnte nicht serialisiert werden!");
+    asio::write(sock, buf.data(), ec);
+}
+
+
+void Skeleton::answerClient(ip::tcp::socket& sock, FunctionCall* d, 
+  asio::error_code& ec) {
+    std::string answer{'1'};
+    ReturnValue* returnValue = new ReturnValue;
+    returnValue->set_json_value(callFunction(d->name()));
+    returnValue->set_success(true); //TODO: Fehlerbehandlung
+    std::cout << returnValue->json_value() << std::endl;
+    sendProtoBuffer(sock, returnValue, ec);
+    //write(sock, buffer(answer, answer.size()), ec);
+    delete returnValue;
+}
+
 
 void Skeleton::serveClient(ip::tcp::socket&& sock) {
     error_code ec;
@@ -37,26 +65,18 @@ void Skeleton::serveClient(ip::tcp::socket&& sock) {
     if (eclog::error("Nachricht konnte nicht gelesen werden", sock, ec)) 
         return;
     buf.commit(bytes_transferred);
-    FunctionCall* d = new FunctionCall;
-    bool functionExists = d->ParseFromIstream(&is);
-    if (!functionExists) {
-        delete d;
+    FunctionCall* functionCall = new FunctionCall;
+    if (!functionCall->ParseFromIstream(&is)) {
+        delete functionCall;
         spdlog::error("Funktionsaufruf konnte nicht deserialisiert werden!");
         return;
     }
-    std::string answer;
-    if (functionExists) {
-        answer = "1";
-    } else {
-        answer = "0";
-        spdlog::warn("Funktion " + d->name() + " wurde nicht gefunden");
-    }
-    write(sock, buffer(answer, answer.size()), ec);
+    answerClient(sock, functionCall, ec);
     if (eclog::error("Antwort konnte nicht gesendet werden", sock, ec)) {
-        delete d;
+        delete functionCall;
         return;
     }
-    spd::info("Antwort gesendet: " + answer);
+    spd::info("Antwort gesendet!");
     sock.close();
 }
 

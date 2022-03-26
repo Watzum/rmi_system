@@ -1,6 +1,7 @@
-#include "remoteFunctionCaller.h"
+#include "remoteFunctionCaller.hpp"
 #include "personStub.h"
 
+#include <json.hpp>
 #include <asio.hpp>
 #include "CLI11.hpp"
 #include <spdlog/spdlog.h>
@@ -9,18 +10,18 @@
 
 using namespace std;
 using namespace asio;
+using json = nlohmann::json;
+
 
 int main(int argc, char* argv[]) {
     CLI::App app{"RMI Client"};
-    string functionName = "default";
-    app.add_option("-f,--function", functionName, "the function to call");
     CLI11_PARSE(app, argc, argv);
 
     spdlog::info("Client is now ready!");
 
     PersonStub st;
-    st.drink();
+    cout << st.drink() << endl;
     st.go();
-    st.eat();
+    cout << st.eat() << endl;
     return 0;
 }

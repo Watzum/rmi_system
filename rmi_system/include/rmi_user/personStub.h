@@ -1,25 +1,26 @@
 #pragma once
 
 #include "abstractClass.h"
-#include "remoteFunctionCaller.h"
+#include "remoteFunctionCaller.hpp"
 
 #include <iostream>
 
-#define __SEND_FUN__ RemoteFunctionCaller::sendFunctionCall(__func__);
+#define __SEND_FUN__(type) return RemoteFunctionCaller::sendFunctionCall<type>(__func__);
+#define __SEND_VOID_FUN__ RemoteFunctionCaller::sendVoidFunctionCall(__func__);
 
 
 // TODO?: AbstractClass = PersonStub, non-pure-virtual Funktion __SEND_FUN__
 class PersonStub : public AbstractClass, RemoteFunctionCaller {
   public:
     void go() {
-        __SEND_FUN__
+        __SEND_VOID_FUN__
     }
 
-    void eat() {
-        __SEND_FUN__
+    int eat() {
+        __SEND_FUN__(int)
     }
 
-    void drink() {
-        __SEND_FUN__
+    bool drink() {
+        __SEND_FUN__(bool)
     }
 };

@@ -6,6 +6,6 @@ class Person : public AbstractClass {
   public:
     ~Person() { };
     void go();
-    void eat();
-    void drink();
+    int eat();
+    bool drink();
 };

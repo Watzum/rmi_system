@@ -34,7 +34,7 @@ protobuf_dep = dependency('protobuf', required : true)
   arguments : ['--proto_path=@CURRENT_SOURCE_DIR@/src', '--cpp_out=@BUILD_DIR@', '@PLAINNAME@'])
 
 # # change proto file accordingly
- generated = gen.process('src/functioncall.proto')
+ generated = gen.process('src/functioncall.proto', 'src/returnvalue.proto')
 # # end protobuf
 
 # subdir('SUBDIR1')
@@ -42,14 +42,13 @@ protobuf_dep = dependency('protobuf', required : true)
 inc_dir = include_directories('include/rmi_system', 'include/rmi_user')
 
 rmi_user_client = ['src/client/main.cpp']
-rmi_system_client = ['src/rmi/remoteFunctionCaller.cpp']
 
 rmi_user_server = ['src/server/main.cpp', 'src/server/person.cpp', 
   'src/server/abstractMethods.cpp']
 rmi_system_server = ['src/rmi/skeleton.cpp']
 
 rmi_server = [rmi_user_server, rmi_system_server, generated]
-rmi_client = [rmi_user_client, rmi_system_client, generated]
+rmi_client = [rmi_user_client, generated]
 
 #src = [rmi_server, rmi_client, generated]
 #src = [rmi_server, rmi_client, generated]

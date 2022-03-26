@@ -9,11 +9,13 @@ void Person::go() {
 }
 
 
-void Person::eat() {
+ int Person::eat() {
     cout << "I am starting to eat!" << endl;
+    return 5;
 }
 
 
-void Person::drink() {
+bool Person::drink() {
     cout << "I am starting to drink!" << endl;
+    return true;
 }
