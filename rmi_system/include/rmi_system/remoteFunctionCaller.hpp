@@ -22,7 +22,7 @@ class RemoteFunctionCaller {
     template<typename T>
     T returnFunctionCall(std::string name);
     void sendFunctionCall(std::string name);
-    std::string handleFunctionCall(std::string name, asio::error_code& ec);
+    ReturnValue* handleFunctionCall(std::string name, asio::error_code& ec);
     
   private: 
 
@@ -70,28 +70,25 @@ RemoteFunctionCaller::~RemoteFunctionCaller() {
 }
 
 
-std::string handleAnswer(asio::ip::tcp::socket& sock, asio::error_code& ec) {
+ReturnValue* handleAnswer(asio::ip::tcp::socket& sock, asio::error_code& ec) {
     asio::streambuf buf;
     auto bytes_transferred = read(sock, buf.prepare(4), ec);
     buf.commit(bytes_transferred);
-    if (ec.value() != 0) return "";
+    if (ec.value() != 0) return nullptr;
     std::istream is{&buf};
     uint32_t protobufLength;
     is >> protobufLength;
     buf.consume(buf.size());
     bytes_transferred = asio::read(sock, buf.prepare(protobufLength), ec);
-    if (ec.value() != 0) return "";
+    if (ec.value() != 0) return nullptr;
     buf.commit(bytes_transferred);
     ReturnValue* returnValue = new ReturnValue;
     if (!returnValue->ParseFromIstream(&is)) {
         delete returnValue;
         spdlog::error("Rückgabewert konnte nicht deserialisiert werden!");
-        return "";
+        return nullptr;
     }
-    std::string j = returnValue->json_value();
-    spdlog::info("Rückgabewert empfangen: " + returnValue->json_value());
-    delete returnValue;
-    return j;
+    return returnValue;
 }
 
 
@@ -113,29 +110,7 @@ void sendProtoBuffer(asio::ip::tcp::socket& sock, std::string name,
 }
 
 
-template<typename T>
-T RemoteFunctionCaller::returnFunctionCall(std::string name) {
-    asio::error_code ec;
-    std::string s{handleFunctionCall(name, ec)};
-    if (ec.value() != 0) {
-        throw rmi_error(ec.message());
-    }
-    using json = nlohmann::json;
-    json j = json::parse(s);
-    return j["returnValue"].get<T>();
-}
-
-
-void RemoteFunctionCaller::sendFunctionCall(const std::string name) {
-    asio::error_code ec;
-    handleFunctionCall(name, ec);
-    if (ec.value() != 0) {
-        throw rmi_error(ec.message());
-    }
-}
-
-
-std::string RemoteFunctionCaller::handleFunctionCall(std::string name, 
+ReturnValue* RemoteFunctionCaller::handleFunctionCall(std::string name, 
   asio::error_code& ec) {
     using namespace asio::ip;
     eclog::warn("Send function call cancelled because\
@@ -144,17 +119,56 @@ std::string RemoteFunctionCaller::handleFunctionCall(std::string name,
     tcp::socket sock{ctx};
     sock.open(server_endpoint.protocol(), ec);
     if (eclog::error("Socket konnte nicht geöffnet werden", sock, ec))
-        return "";
+        return nullptr;
     sock.connect(server_endpoint, ec);
     if (eclog::error("Verbindung zu " + server_endpoint.address().to_string()\
-          + " konnte nicht aufgebaut werden", sock, ec)) return "";
+          + " konnte nicht aufgebaut werden", sock, ec)) return nullptr;
     sendProtoBuffer(sock, name, ec);
     if (eclog::error(name + " konnte nicht gesendet werden", sock, ec)) 
-        return "";
+        return nullptr;
     spdlog::info("Funktionsaufruf: " + name + " wurde gesendet!");
-    std::string jsonString = handleAnswer(sock, ec);
-    if (eclog::error("Antwort konnte nicht gelesen werden", sock, ec))
-        return "";
+    ReturnValue* returnValue = handleAnswer(sock, ec);
+    if (eclog::error("Antwort konnte nicht gelesen werden", sock, ec)) {
+        delete returnValue;
+        return nullptr;
+    }
     sock.close(); 
-    return jsonString;
+    return returnValue;
+}
+
+
+//Überprüft, ob der Aufruf durchgeführt werden konnte
+//Wenn nicht wird eine entsprechende Exception geworfen
+inline void checkSuccessOfFunctionCall(const ReturnValue* r, 
+  const asio::error_code& ec) {
+    if (ec.value() != 0) {
+        throw rmi_error(ec.message());
+    } 
+    if (r == nullptr) {
+        throw rmi_error("Funktionsaufruf konnte nicht deserialisiert werden!");
+    }
+    if (r->success() == false) {
+        throw rmi_error("Entfernte Funktion konnte nicht aufgerufen werden");
+    }
+} 
+
+
+template<typename T>
+T RemoteFunctionCaller::returnFunctionCall(std::string name) {
+    asio::error_code ec;
+    ReturnValue* returnValue = handleFunctionCall(name, ec);
+    checkSuccessOfFunctionCall(returnValue, ec);
+    spdlog::info("Entfernte Funktion konnte aufgerufen werden");
+    spdlog::info("Rückgabewert empfangen: " + returnValue->json_value());
+    using json = nlohmann::json;
+    json j = json::parse(returnValue->json_value());
+    return j["returnValue"].get<T>();
+}
+
+
+void RemoteFunctionCaller::sendFunctionCall(const std::string name) {
+    asio::error_code ec;
+    ReturnValue* returnValue = handleFunctionCall(name, ec);
+    checkSuccessOfFunctionCall(returnValue, ec);
+    spdlog::info("Entfernte Funktion konnte aufgerufen werden");
 }
