@@ -39,13 +39,11 @@ void sendProtoBuffer(ip::tcp::socket& sock,
 
 void Skeleton::answerClient(ip::tcp::socket& sock, FunctionCall* d, 
   asio::error_code& ec) {
-    std::string answer{'1'};
     ReturnValue* returnValue = new ReturnValue;
     returnValue->set_json_value(callFunction(d->name()));
     returnValue->set_success(true); //TODO: Fehlerbehandlung
-    std::cout << returnValue->json_value() << std::endl;
+    spdlog::info("Sende Rückgabewert: " + returnValue->json_value());
     sendProtoBuffer(sock, returnValue, ec);
-    //write(sock, buffer(answer, answer.size()), ec);
     delete returnValue;
 }
 

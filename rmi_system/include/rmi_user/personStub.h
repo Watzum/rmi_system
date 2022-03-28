@@ -5,8 +5,8 @@
 
 #include <iostream>
 
-#define __SEND_FUN__(type) return RemoteFunctionCaller::sendFunctionCall<type>(__func__);
-#define __SEND_VOID_FUN__ RemoteFunctionCaller::sendVoidFunctionCall(__func__);
+#define __SEND_FUN__(type) return RemoteFunctionCaller::returnFunctionCall<type>(__func__);
+#define __SEND_VOID_FUN__ RemoteFunctionCaller::sendFunctionCall(__func__);
 
 
 // TODO?: AbstractClass = PersonStub, non-pure-virtual Funktion __SEND_FUN__

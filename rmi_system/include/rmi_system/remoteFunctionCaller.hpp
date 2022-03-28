@@ -1,5 +1,6 @@
 #pragma once
 #include "error_handler.h"
+#include "rmi_exception.h"
 #include "functioncall.pb.h"
 #include "returnvalue.pb.h"
 
@@ -10,8 +11,6 @@
 #include <iostream>
 #include <string>
 
-//using namespace asio;
-
 class RemoteFunctionCaller {
 
   public: 
@@ -21,8 +20,9 @@ class RemoteFunctionCaller {
     RemoteFunctionCaller(std::string dest_ip_address, unsigned short port);
     ~RemoteFunctionCaller();
     template<typename T>
-    T sendFunctionCall(std::string name);
-    void sendVoidFunctionCall(std::string name);
+    T returnFunctionCall(std::string name);
+    void sendFunctionCall(std::string name);
+    std::string handleFunctionCall(std::string name, asio::error_code& ec);
     
   private: 
 
@@ -89,6 +89,7 @@ std::string handleAnswer(asio::ip::tcp::socket& sock, asio::error_code& ec) {
         return "";
     }
     std::string j = returnValue->json_value();
+    spdlog::info("Rückgabewert empfangen: " + returnValue->json_value());
     delete returnValue;
     return j;
 }
@@ -113,46 +114,47 @@ void sendProtoBuffer(asio::ip::tcp::socket& sock, std::string name,
 
 
 template<typename T>
-T RemoteFunctionCaller::sendFunctionCall(std::string name) {
-    using namespace asio::ip;
-    eclog::warn("Send function call cancelled because\
-          endpoint is not set", endpoint_error);
+T RemoteFunctionCaller::returnFunctionCall(std::string name) {
     asio::error_code ec;
-    asio::io_context ctx;
-    tcp::socket sock{ctx};
-    sock.open(server_endpoint.protocol(), ec);
-    eclog::error("Socket konnte nicht geöffnet werden", sock, ec);
-    sock.connect(server_endpoint, ec);
-    eclog::error("Verbindung zu " + server_endpoint.address().to_string()\
-          + " konnte nicht aufgebaut werden", sock, ec);
-    sendProtoBuffer(sock, name, ec);
-    eclog::error(name + " konnte nicht gesendet werden", sock, ec);
-    spdlog::info("Funktionsaufruf: " + name + " wurde gesendet!");
-    std::string jsonString = handleAnswer(sock, ec);
-    eclog::error("Antwort konnte nicht gelesen werden", sock, ec);
-    sock.close(); 
+    std::string s{handleFunctionCall(name, ec)};
+    if (ec.value() != 0) {
+        throw rmi_error(ec.message());
+    }
     using json = nlohmann::json;
-    json j = json::parse(jsonString);
+    json j = json::parse(s);
     return j["returnValue"].get<T>();
 }
 
 
-void RemoteFunctionCaller::sendVoidFunctionCall(std::string name) {
+void RemoteFunctionCaller::sendFunctionCall(const std::string name) {
+    asio::error_code ec;
+    handleFunctionCall(name, ec);
+    if (ec.value() != 0) {
+        throw rmi_error(ec.message());
+    }
+}
+
+
+std::string RemoteFunctionCaller::handleFunctionCall(std::string name, 
+  asio::error_code& ec) {
     using namespace asio::ip;
     eclog::warn("Send function call cancelled because\
           endpoint is not set", endpoint_error);
-    asio::error_code ec;
     asio::io_context ctx;
     tcp::socket sock{ctx};
     sock.open(server_endpoint.protocol(), ec);
-    eclog::error("Socket konnte nicht geöffnet werden", sock, ec);
+    if (eclog::error("Socket konnte nicht geöffnet werden", sock, ec))
+        return "";
     sock.connect(server_endpoint, ec);
-    eclog::error("Verbindung zu " + server_endpoint.address().to_string()\
-          + " konnte nicht aufgebaut werden", sock, ec);
+    if (eclog::error("Verbindung zu " + server_endpoint.address().to_string()\
+          + " konnte nicht aufgebaut werden", sock, ec)) return "";
     sendProtoBuffer(sock, name, ec);
-    eclog::error(name + " konnte nicht gesendet werden", sock, ec);
+    if (eclog::error(name + " konnte nicht gesendet werden", sock, ec)) 
+        return "";
     spdlog::info("Funktionsaufruf: " + name + " wurde gesendet!");
     std::string jsonString = handleAnswer(sock, ec);
-    eclog::error("Antwort konnte nicht gelesen werden", sock, ec);
-    sock.close();
+    if (eclog::error("Antwort konnte nicht gelesen werden", sock, ec))
+        return "";
+    sock.close(); 
+    return jsonString;
 }

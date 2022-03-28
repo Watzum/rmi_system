@@ -3,7 +3,7 @@
 
 #include <json.hpp>
 #include <asio.hpp>
-#include "CLI11.hpp"
+//#include "CLI11.hpp"
 #include <spdlog/spdlog.h>
 
 #include <iostream>
@@ -13,9 +13,9 @@ using namespace asio;
 using json = nlohmann::json;
 
 
-int main(int argc, char* argv[]) {
-    CLI::App app{"RMI Client"};
-    CLI11_PARSE(app, argc, argv);
+int main() { //int argc, char* argv[]
+    //CLI::App app{"RMI Client"};
+    //CLI11_PARSE(app, argc, argv);
 
     spdlog::info("Client is now ready!");
 
