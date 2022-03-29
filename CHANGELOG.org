@@ -1,5 +1,10 @@
 * Changelog
 ** [Unreleased]
+** [0.4.0] - 2022-03-29
+*** Added 
+- Rückgabe des Return-Wertes über das Netzwerk
+*** Changed
+- Kommunikation zwischen Client und Server basiert vollständig auf Protokoll Buffers
 ** [0.3.0] - 2022-03-21
 *** Changed
 - Das Senden des Funktionsaufrufes basiert auf Protokoll Buffers
