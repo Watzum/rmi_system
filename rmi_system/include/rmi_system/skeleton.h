@@ -22,3 +22,12 @@ class Skeleton {
     AbstractClass* rmi_object;
     asio::ip::tcp::endpoint my_endpoint;
 };
+
+//Für den Aufruf in abstractMethods.cpp
+#define __FUNCTION__(name)  if (functionName == #name)\
+                                j["returnValue"] = rmi_object->name();
+#define __VOID_FUNCTION__(name) if (functionName == #name)\
+    if (std::is_void<decltype(rmi_object->name())>())\
+        rmi_object->name();
+    //TODO: sonst Fehlerbehandlung, weil keine void function
+#define __END__ return j.dump();

@@ -138,7 +138,7 @@ ReturnValue* RemoteFunctionCaller::handleFunctionCall(std::string name,
 
 
 //Überprüft, ob der Aufruf durchgeführt werden konnte
-//Wenn nicht wird eine entsprechende Exception geworfen
+//Wenn nicht wird eine rmi_exception geworfen
 inline void checkSuccessOfFunctionCall(const ReturnValue* r, 
   const asio::error_code& ec) {
     if (ec.value() != 0) {
