@@ -1,6 +1,7 @@
 #pragma once
 #include "error_handler.h"
-#include "rmi_exception.h"
+#include "rmi_system_error.h"
+#include "rmi_user_error.h"
 #include "functioncall.pb.h"
 #include "returnvalue.pb.h"
 
@@ -142,19 +143,25 @@ ReturnValue* RemoteFunctionCaller::handleFunctionCall(std::string name,
 
 //Überprüft, ob der Aufruf durchgeführt werden konnte
 //Wenn nicht wird eine rmi_exception geworfen
-inline void checkSuccessOfFunctionCall(ReturnValue* r, 
+void checkSuccessOfFunctionCall(ReturnValue* r, 
   const asio::error_code& ec) {
     if (ec.value() != 0) {
         delete r;
-        throw rmi_error(ec.message());
+        throw rmi_system_error(ec.message());
     } 
     if (r == nullptr) {
         delete r;
-        throw rmi_error("Funktionsaufruf konnte nicht deserialisiert werden!");
+        throw rmi_system_error("Funktionsaufruf konnte nicht deserialisiert werden!");
     }
     if (r->success() == false) {
         delete r;
-        throw rmi_error("Entfernte Funktion konnte nicht aufgerufen werden");
+        throw rmi_system_error("Entfernte Funktion konnte nicht aufgerufen werden");
+    }
+    if (r->has_exception_text()) {
+        spdlog::info("Ein Fehler wurde geworfen: " + r->exception_text());
+        const std::string s{r->exception_text()};
+        delete r;
+        throw rmi_user_error(s);
     }
 } 
 

@@ -2,5 +2,6 @@ syntax = "proto3";
 
 message ReturnValue {
   bool success = 1;
-  string json_value = 2;
+  optional string json_value = 2;
+  optional string exception_text = 3;
 }

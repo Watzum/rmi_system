@@ -14,7 +14,6 @@ class Skeleton {
     void listenToFunctionCalls();
 
   private: 
-    
     void serveClient(asio::ip::tcp::socket&& sock);
     void answerClient(asio::ip::tcp::socket& sock, FunctionCall* f, 
       asio::error_code& ec);

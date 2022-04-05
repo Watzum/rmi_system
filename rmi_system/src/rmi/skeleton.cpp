@@ -42,7 +42,13 @@ void Skeleton::answerClient(ip::tcp::socket& sock, FunctionCall* d,
     ReturnValue* returnValue = new ReturnValue;
     nlohmann::json j = nlohmann::json::parse(d->json_arguments());
     //TODO: JSON Fehlerbehandlung!! -> z.B. type_error
-    returnValue->set_json_value(callFunction(d->name(), j));
+    try {  
+        std::string s{callFunction(d->name(), j)};
+        returnValue->set_json_value(s);
+    } catch (const std::exception& ex) {
+        spdlog::info("Funktion " + d->name() + " hat eine Exception geworfen: " + ex.what());
+        returnValue->set_exception_text(ex.what());
+    }
     returnValue->set_success(true); //TODO: Fehlerbehandlung
     spdlog::info("Sende Rückgabewert: " + returnValue->json_value());
     sendProtoBuffer(sock, returnValue, ec);
