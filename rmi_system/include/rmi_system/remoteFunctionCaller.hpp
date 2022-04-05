@@ -19,11 +19,12 @@ class RemoteFunctionCaller {
     explicit RemoteFunctionCaller(std::string dest_ip_address);
     RemoteFunctionCaller(std::string dest_ip_address, unsigned short port);
     ~RemoteFunctionCaller();
-    template<typename T>
-    T returnFunctionCall(std::string name);
+    template<typename T, typename... Tail>
+    T returnFunctionCall(std::string name, Tail... tail);
     template<typename... Tail>
     void sendFunctionCall(std::string name, Tail... tail);
-    ReturnValue* handleFunctionCall(std::string name, asio::error_code& ec);
+    ReturnValue* handleFunctionCall(std::string name, 
+      std::string jsonParameters, asio::error_code& ec);
     
   private: 
 
@@ -94,9 +95,10 @@ ReturnValue* handleAnswer(asio::ip::tcp::socket& sock, asio::error_code& ec) {
 
 
 void sendProtoBuffer(asio::ip::tcp::socket& sock, std::string name, 
-  asio::error_code& ec) {
+  std::string json_arguments, asio::error_code& ec) {
     FunctionCall* d = new FunctionCall;
     d->set_name(name);
+    d->set_json_arguments(json_arguments);
     asio::streambuf buf;
     buf.prepare(4);
     std::ostream os(&buf);
@@ -112,7 +114,7 @@ void sendProtoBuffer(asio::ip::tcp::socket& sock, std::string name,
 
 
 ReturnValue* RemoteFunctionCaller::handleFunctionCall(std::string name, 
-  asio::error_code& ec) {
+  std::string json_arguments, asio::error_code& ec) {
     using namespace asio::ip;
     eclog::warn("Send function call cancelled because\
           endpoint is not set", endpoint_error);
@@ -124,7 +126,7 @@ ReturnValue* RemoteFunctionCaller::handleFunctionCall(std::string name,
     sock.connect(server_endpoint, ec);
     if (eclog::error("Verbindung zu " + server_endpoint.address().to_string()\
           + " konnte nicht aufgebaut werden", sock, ec)) return nullptr;
-    sendProtoBuffer(sock, name, ec);
+    sendProtoBuffer(sock, name, json_arguments, ec);
     if (eclog::error(name + " konnte nicht gesendet werden", sock, ec)) 
         return nullptr;
     spdlog::info("Funktionsaufruf: " + name + " wurde gesendet!");
@@ -155,19 +157,6 @@ inline void checkSuccessOfFunctionCall(ReturnValue* r,
         throw rmi_error("Entfernte Funktion konnte nicht aufgerufen werden");
     }
 } 
-
-
-template<typename T>
-T RemoteFunctionCaller::returnFunctionCall(std::string name) {
-    asio::error_code ec;
-    ReturnValue* returnValue = handleFunctionCall(name, ec);
-    checkSuccessOfFunctionCall(returnValue, ec);
-    spdlog::info("Entfernte Funktion konnte aufgerufen werden");
-    spdlog::info("Rückgabewert empfangen: " + returnValue->json_value());
-    using json = nlohmann::json;
-    json j = json::parse(returnValue->json_value());
-    return j["returnValue"].get<T>();
-}
 
 
 std::string convertParametersToJson(nlohmann::json& j, int& i) {
@@ -201,13 +190,26 @@ std::string getJsonParameters(Tail... tail) {
 }
 
 
+template<typename T, typename... Tail>
+T RemoteFunctionCaller::returnFunctionCall(std::string name, Tail... tail) {
+    asio::error_code ec;
+    std::string s{getJsonParameters(tail...)};
+    ReturnValue* returnValue = handleFunctionCall(name, s, ec);
+    checkSuccessOfFunctionCall(returnValue, ec);
+    spdlog::info("Entfernte Funktion konnte aufgerufen werden");
+    spdlog::info("Rückgabewert empfangen: " + returnValue->json_value());
+    using json = nlohmann::json;
+    json j = json::parse(returnValue->json_value());
+    return j["returnValue"].get<T>();
+}
+
+
 template<typename... Tail>
 void RemoteFunctionCaller::sendFunctionCall(const std::string name, 
   Tail... tail) {
     asio::error_code ec;
     std::string s{getJsonParameters(tail...)};
-    std::cout << "Parameters: " << s << std::endl;
-    ReturnValue* returnValue = handleFunctionCall(name, ec);
+    ReturnValue* returnValue = handleFunctionCall(name, s, ec);
     checkSuccessOfFunctionCall(returnValue, ec);
     delete returnValue;
     spdlog::info("Entfernte Funktion konnte aufgerufen werden");

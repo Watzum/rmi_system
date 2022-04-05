@@ -40,7 +40,9 @@ void sendProtoBuffer(ip::tcp::socket& sock,
 void Skeleton::answerClient(ip::tcp::socket& sock, FunctionCall* d, 
   asio::error_code& ec) {
     ReturnValue* returnValue = new ReturnValue;
-    returnValue->set_json_value(callFunction(d->name()));
+    nlohmann::json j = nlohmann::json::parse(d->json_arguments());
+    //TODO: JSON Fehlerbehandlung!! -> z.B. type_error
+    returnValue->set_json_value(callFunction(d->name(), j));
     returnValue->set_success(true); //TODO: Fehlerbehandlung
     spdlog::info("Sende Rückgabewert: " + returnValue->json_value());
     sendProtoBuffer(sock, returnValue, ec);

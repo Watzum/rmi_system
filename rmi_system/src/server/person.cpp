@@ -5,7 +5,7 @@
 using namespace std;
 
 void Person::go(int i) {
-    cout << "I am going... somewhere " + i << endl;
+    cout << "I am going... somewhere " << i << endl;
 }
 
 
