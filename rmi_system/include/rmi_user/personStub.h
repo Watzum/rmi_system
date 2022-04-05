@@ -8,13 +8,12 @@
 //#define __SEND_FUN__(type) ((type) == void) ? RemoteFunctionCaller::sendFunctionCall(__func__); : return RemoteFunctionCaller::returnFunctionCall<type>(__func__);
 
 #define __SEND_FUN__(type) return RemoteFunctionCaller::returnFunctionCall<type>(__func__);
-#define __SEND_VOID_FUN__ RemoteFunctionCaller::sendFunctionCall(__func__);
+#define __SEND_VOID_FUN__(...) RemoteFunctionCaller::sendFunctionCall(__func__, __VA_ARGS__);
 
-// TODO?: AbstractClass = PersonStub, non-pure-virtual Funktion __SEND_FUN__
 class PersonStub : public AbstractClass, RemoteFunctionCaller {
   public:
-    void go() {
-        __SEND_VOID_FUN__
+    void go(int i) {
+        __SEND_VOID_FUN__(i)
     }
 
     int eat() {

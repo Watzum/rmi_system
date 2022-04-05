@@ -5,7 +5,7 @@
 class Person : public AbstractClass {
   public:
     ~Person() { };
-    void go();
+    void go(int i);
     int eat();
     bool drink();
 };

@@ -2,4 +2,5 @@ syntax = "proto3";
 
 message FunctionCall {
   string name = 1;
+  optional string json_arguments = 2;
 }

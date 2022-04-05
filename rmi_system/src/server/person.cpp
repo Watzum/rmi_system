@@ -4,8 +4,8 @@
 
 using namespace std;
 
-void Person::go() {
-    cout << "I am going... somewhere" << endl;
+void Person::go(int i) {
+    cout << "I am going... somewhere " + i << endl;
 }
 
 

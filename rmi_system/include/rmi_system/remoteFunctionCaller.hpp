@@ -21,7 +21,8 @@ class RemoteFunctionCaller {
     ~RemoteFunctionCaller();
     template<typename T>
     T returnFunctionCall(std::string name);
-    void sendFunctionCall(std::string name);
+    template<typename... Tail>
+    void sendFunctionCall(std::string name, Tail... tail);
     ReturnValue* handleFunctionCall(std::string name, asio::error_code& ec);
     
   private: 
@@ -139,15 +140,18 @@ ReturnValue* RemoteFunctionCaller::handleFunctionCall(std::string name,
 
 //Überprüft, ob der Aufruf durchgeführt werden konnte
 //Wenn nicht wird eine rmi_exception geworfen
-inline void checkSuccessOfFunctionCall(const ReturnValue* r, 
+inline void checkSuccessOfFunctionCall(ReturnValue* r, 
   const asio::error_code& ec) {
     if (ec.value() != 0) {
+        delete r;
         throw rmi_error(ec.message());
     } 
     if (r == nullptr) {
+        delete r;
         throw rmi_error("Funktionsaufruf konnte nicht deserialisiert werden!");
     }
     if (r->success() == false) {
+        delete r;
         throw rmi_error("Entfernte Funktion konnte nicht aufgerufen werden");
     }
 } 
@@ -166,9 +170,45 @@ T RemoteFunctionCaller::returnFunctionCall(std::string name) {
 }
 
 
-void RemoteFunctionCaller::sendFunctionCall(const std::string name) {
+std::string convertParametersToJson(nlohmann::json& j, int& i) {
+    i++;
+    return j.dump();
+}
+
+
+template<typename T>
+void convertParametersToJson(nlohmann::json& j, int& i, T last) {
+    i++;
+    j[std::to_string(i)] = last;
+}
+
+
+template<typename T, typename... Tail>
+void convertParametersToJson(nlohmann::json& j, int& i, 
+  T head, Tail... tail) {
+    i++;
+    j[i] = head;
+    convertParametersToJson(j, i, tail...);
+}
+
+
+template<typename... Tail>
+std::string getJsonParameters(Tail... tail) {
+    nlohmann::json j;
+    int i = 0;
+    convertParametersToJson(j, i, tail...);
+    return j.dump();
+}
+
+
+template<typename... Tail>
+void RemoteFunctionCaller::sendFunctionCall(const std::string name, 
+  Tail... tail) {
     asio::error_code ec;
+    std::string s{getJsonParameters(tail...)};
+    std::cout << "Parameters: " << s << std::endl;
     ReturnValue* returnValue = handleFunctionCall(name, ec);
     checkSuccessOfFunctionCall(returnValue, ec);
+    delete returnValue;
     spdlog::info("Entfernte Funktion konnte aufgerufen werden");
 }

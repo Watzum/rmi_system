@@ -21,7 +21,7 @@ int main() { //int argc, char* argv[]
 
     PersonStub st;
     cout << st.drink() << endl;
-    st.go();
+    st.go(5);
     cout << st.eat() << endl;
     return 0;
 }
