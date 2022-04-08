@@ -11,6 +11,8 @@ rmi_system/build/*
 doc/*
 !doc/*.tex
 !doc/*.pdf
+!doc/images
+!doc/*.bib
 
 # Prerequisites
 *.d

@@ -5,8 +5,6 @@
 
 #include <iostream>
 
-//#define __SEND_FUN__(type) ((type) == void) ? RemoteFunctionCaller::sendFunctionCall(__func__); : return RemoteFunctionCaller::returnFunctionCall<type>(__func__);
-
 #define __SEND_FUN__(type) return RemoteFunctionCaller::returnFunctionCall<type>(__func__);
 #define __SEND_VOID_FUN__(...) RemoteFunctionCaller::sendFunctionCall(__func__, __VA_ARGS__);
 

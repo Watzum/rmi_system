@@ -10,8 +10,9 @@ class Skeleton {
 
   public: 
     Skeleton(AbstractClass*);
-    explicit Skeleton(AbstractClass*, unsigned short port);
+    Skeleton(AbstractClass*, unsigned short port);
     void listenToFunctionCalls();
+    void setPort();
 
   private: 
     void serveClient(asio::ip::tcp::socket&& sock);
