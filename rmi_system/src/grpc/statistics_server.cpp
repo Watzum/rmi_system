@@ -2,6 +2,8 @@
 #include <memory>
 #include <string>
 
+#include <spdlog/spdlog.h>
+
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
@@ -21,6 +23,7 @@ Status StatisticsManagerImpl::GetStatistics(ServerContext* context, const StatsR
   context = context; //wegen "unused variable" Warnung :)
   int counter{getCounter(request->function_name())};
   reply->set_counter(counter);
+  spdlog::info("grpc: GetStatistics wurde aufgerufen");
   return Status::OK;
 }
 
@@ -34,5 +37,6 @@ grpc::Status StatisticsManagerImpl::GetFunctionNames(grpc::ServerContext* contex
         s += imap.first + ", ";
     }
     reply->set_names(s);
+    spdlog::info("grpc: GetFunctionNames wurde aufgerufen");
     return Status::OK;
 }

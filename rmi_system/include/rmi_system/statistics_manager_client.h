@@ -1,10 +1,9 @@
+#include "build/client.p/statistics_server.grpc.pb.h"
+#include <grpcpp/grpcpp.h>
+
 #include <iostream>
 #include <memory>
 #include <string>
-
-#include <grpcpp/grpcpp.h>
-
-#include "build/client.p/statistics_server.grpc.pb.h"
 
 class StatisticsManagerClient {
   public: 
