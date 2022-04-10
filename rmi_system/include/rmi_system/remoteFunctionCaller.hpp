@@ -4,6 +4,7 @@
 #include "rmi_user_error.h"
 #include "functioncall.pb.h"
 #include "returnvalue.pb.h"
+#include "statistics_manager_client.h"
 
 #include <spdlog/spdlog.h>
 #include <json.hpp>
@@ -19,19 +20,22 @@ class RemoteFunctionCaller {
     RemoteFunctionCaller();
     explicit RemoteFunctionCaller(std::string dest_ip_address);
     RemoteFunctionCaller(std::string dest_ip_address, unsigned short port);
-    ~RemoteFunctionCaller();
+    virtual ~RemoteFunctionCaller();
     template<typename T, typename... Tail>
     T returnFunctionCall(std::string name, Tail... tail);
     template<typename... Tail>
     void sendFunctionCall(std::string name, Tail... tail);
     ReturnValue* handleFunctionCall(std::string name, 
       std::string jsonParameters, asio::error_code& ec);
+    virtual int GetStatistics(const std::string functionName); 
+    virtual std::string GetFunctionNames();   
     
   private: 
 
     void setEndpoint(std::string ip_address, unsigned short port);
     void printEndpoint();
 
+    StatisticsManagerClient stats_client;
     asio::ip::tcp::endpoint server_endpoint;
     asio::error_code endpoint_error;
 };
@@ -53,16 +57,21 @@ void RemoteFunctionCaller::setEndpoint(std::string ip_address,
     } 
     server_endpoint.port(port);
     printEndpoint();
+    std::string target_str{ip_address + ":50051"};
+    //stats_client = StatisticsManagerClient(
+    //  grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()));
 }
 
 
-RemoteFunctionCaller::RemoteFunctionCaller() {
+RemoteFunctionCaller::RemoteFunctionCaller() 
+  : stats_client(grpc::CreateChannel("127.0.0.1:50051", grpc::InsecureChannelCredentials())) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     setEndpoint("127.0.0.1", 1113);
 }
 
 
-RemoteFunctionCaller::RemoteFunctionCaller(std::string dest_ip_address) {
+RemoteFunctionCaller::RemoteFunctionCaller(std::string dest_ip_address) 
+  : stats_client(grpc::CreateChannel("127.0.0.1:50051", grpc::InsecureChannelCredentials())) {  
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     setEndpoint(dest_ip_address, 1113);
 }
@@ -220,4 +229,14 @@ void RemoteFunctionCaller::sendFunctionCall(const std::string name,
     checkSuccessOfFunctionCall(returnValue, ec);
     delete returnValue;
     spdlog::info("Entfernte Funktion konnte aufgerufen werden");
+}
+
+
+int RemoteFunctionCaller::GetStatistics(const std::string functionName) {
+    return stats_client.GetStatistics(functionName);
+}
+
+
+std::string RemoteFunctionCaller::GetFunctionNames() {
+    return stats_client.GetFunctionNames();
 }

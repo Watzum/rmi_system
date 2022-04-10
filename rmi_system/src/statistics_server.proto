@@ -1,17 +1,22 @@
 syntax = "proto3";
 
-// The greeting service definition.
+import "google/protobuf/empty.proto";
+
+
 service StatisticsManager {
-  // Sends a greeting
   rpc GetStatistics (StatsRequest) returns (StatsReply) {}
+  rpc GetFunctionNames (google.protobuf.Empty) returns (FunctionNamesReply) {}
 }
 
-// The request message containing the user's name.
 message StatsRequest {
-  string name = 1;
+  string function_name = 1;
 }
 
 // The response message containing the greetings
 message StatsReply {
-  string message = 1;
+  int32 counter = 1;
+}
+
+message FunctionNamesReply {
+  string names = 1;
 }

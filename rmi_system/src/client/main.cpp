@@ -31,5 +31,7 @@ int main() { //int argc, char* argv[]
         std::cout << ex.what() << std::endl;
     }
     cout << st.eat() << endl;
+    cout << st.GetFunctionNames() << endl;
+    cout << st.GetStatistics("eat") << endl;
     return 0;
 }

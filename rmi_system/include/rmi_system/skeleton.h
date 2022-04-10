@@ -25,13 +25,14 @@ class Skeleton {
     AbstractClass* rmi_object;
     asio::ip::tcp::endpoint my_endpoint;
     StatisticsManagerImpl service;
+    std::unique_ptr<grpc::Server> server;
 };
 
 //Für den Aufruf in abstractMethods.cpp
 #define __ARGUMENT__(type, place) par[#place].get<type>()
-#define __FUNCTION__(name, ...)  if (functionName == #name)\
+#define __FUNCTION__(name, ...) service.incrementCounter(#name); if (functionName == #name)\
                                 j["returnValue"] = rmi_object->name(__VA_ARGS__);
-#define __VOID_FUNCTION__(name, ...) if (functionName == #name)\
+#define __VOID_FUNCTION__(name, ...) service.incrementCounter(#name); if (functionName == #name)\
     rmi_object->name(__VA_ARGS__);
     //if (std::is_void<decltype(rmi_object->name(5, __VA_ARGS__))>())
     //TODO: sonst Fehlerbehandlung, weil keine void function

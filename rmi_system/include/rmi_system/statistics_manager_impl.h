@@ -20,14 +20,16 @@ class StatisticsManagerImpl final : public StatisticsManager::Service {
   public: 
     grpc::Status GetStatistics(grpc::ServerContext* context, const StatsRequest* request,
                   StatsReply* reply) override;
-    
+    grpc::Status GetFunctionNames(grpc::ServerContext* context, const ::google::protobuf::Empty* request,
+                  FunctionNamesReply* reply) override;
+
     
     void incrementCounter(std::string functionName) {
       std::scoped_lock lck{mtx};
       if (callCounter.contains(functionName)) {
         callCounter[functionName]++;
       } else {
-        callCounter[functionName] = 1;
+        callCounter[functionName] = 0;
       }
     }
 

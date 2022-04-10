@@ -6,6 +6,7 @@
 
 #include <asio.hpp>
 #include <spdlog/spdlog.h>
+#include <json.hpp>
 
 #include <iostream>
 #include <string>
@@ -26,13 +27,15 @@ void Skeleton::startStatisticsManager() {
     // clients. In this case it corresponds to an *synchronous* service.
     builder.RegisterService(&service);
     // Finally assemble the server.
-    std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
-    std::cout << "Server listening on " << server_address << std::endl;
+    std::unique_ptr<grpc::Server> s(builder.BuildAndStart());
+    server.swap(s);
+    spdlog::info("Server listening on " + server_address);
 
     // Wait for the server to shutdown. Note that some other thread must be
     // responsible for shutting down the server for this call to ever return.
     server->Wait();
 }
+
 
 inline ip::tcp::acceptor setUpAcceptor(io_context& ctx,
   const ip::tcp::endpoint& ep, error_code& ec) {
@@ -65,7 +68,6 @@ void Skeleton::answerClient(ip::tcp::socket& sock, FunctionCall* d,
     nlohmann::json j = nlohmann::json::parse(d->json_arguments());
     //TODO: JSON Fehlerbehandlung!! -> z.B. type_error
     try {  
-        service.incrementCounter(d->name());
         std::string s{callFunction(d->name(), j)};
         returnValue->set_json_value(s);
     } catch (const std::exception& ex) {
@@ -139,6 +141,8 @@ void Skeleton::printEndpoint() {
 Skeleton::Skeleton(AbstractClass* a) 
   : rmi_object{a}, my_endpoint{ip::tcp::v4(), 1113} {
     printEndpoint();
+    nlohmann::json j;
+    callFunction("", j);
     std::thread t{&Skeleton::startStatisticsManager, this};
     t.detach();
 }
@@ -147,6 +151,7 @@ Skeleton::Skeleton(AbstractClass* a)
 Skeleton::Skeleton(AbstractClass* a, unsigned short port) 
   : rmi_object{a}, my_endpoint{ip::tcp::v4(), port} {
     printEndpoint();
+    nlohmann::json j;
+    callFunction("", j);
     std::thread t{&Skeleton::startStatisticsManager, this};
-    t.detach();
 }

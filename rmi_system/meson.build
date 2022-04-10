@@ -60,7 +60,7 @@ rmi_user_server = ['src/server/main.cpp', 'src/server/person.cpp',
 rmi_system_server = ['src/rmi/skeleton.cpp', 'src/grpc/statistics_server.cpp']
 
 rmi_server = [rmi_user_server, rmi_system_server, grpc_src_server, generated]
-rmi_client = [rmi_user_client, generated]
+rmi_client = [rmi_user_client, grpc_src_client, generated]
 
 
 
@@ -70,7 +70,7 @@ rmi_client = [rmi_user_client, generated]
 executable('client',
            sources : rmi_client,
            include_directories : inc_dir,
-           dependencies : [thread_dep, protobuf_dep]
+           dependencies : [thread_dep, grpc_dep, protobuf_dep]
           )
 
 executable('server',
@@ -79,11 +79,11 @@ executable('server',
            dependencies : [thread_dep, grpc_dep, protobuf_dep]
           )
 
-executable('grpc_client',
-           sources : grpc_src_client,
-           include_directories : inc_dir,
-           dependencies : [thread_dep, protobuf_dep, grpc_dep]
-           )
+#executable('grpc_client',
+#           sources : grpc_src_client,
+#           include_directories : inc_dir,
+#           dependencies : [thread_dep, protobuf_dep, grpc_dep]
+#           )
 
 #executable('grpc_server',
 #           sources : grpc_src_server,
