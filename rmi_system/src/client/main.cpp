@@ -1,16 +1,16 @@
 #include "remoteFunctionCaller.hpp"
 #include "personStub.h"
 
-#include <json.hpp>
+/*#include <json.hpp>
 #include <asio.hpp>
 #include "CLI11.hpp"
-#include <spdlog/spdlog.h>
+#include <spdlog/spdlog.h>*/
 
 #include <iostream>
 
 using namespace std;
-using namespace asio;
-using json = nlohmann::json;
+//using namespace asio;
+//using json = nlohmann::json;
 
 
 int main() { //int argc, char* argv[]
@@ -24,10 +24,12 @@ int main() { //int argc, char* argv[]
     CLI11_PARSE(app, argc, argv);*/
 
     PersonStub st;
-    cout << st.drink() << endl;
-    st.go(5);
-    st.go(7);
-    st.go(11);
+    cout << st.drink("Hello!...") << endl;
+    try {
+        st.go(5);
+    } catch (std::exception& ex) {
+        std::cout << ex.what() << std::endl;
+    }
     cout << st.eat() << endl;
     return 0;
 }

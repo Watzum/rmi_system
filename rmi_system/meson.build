@@ -3,7 +3,7 @@ project('rmi_system', 'cpp',
         license : ['Boost'],
         version : '0.1',
         # don't change anything of the three following options!
-        default_options : ['cpp_std=c++17', 'warning_level=3', 'werror=true'])
+        default_options : ['cpp_std=c++20', 'warning_level=3', 'werror=true'])
 
 thread_dep = dependency('threads')
 
@@ -64,4 +64,3 @@ executable('server',
            include_directories : inc_dir,
            dependencies : [thread_dep, protobuf_dep]
           )
-

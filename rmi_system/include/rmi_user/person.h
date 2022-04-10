@@ -3,6 +3,8 @@
 #include "abstractClass.h"
 #include "skeleton.h"
 
+#include <string>
+
 class Person : public AbstractClass, public Skeleton {
   public:
     Person() : Skeleton(this) {
@@ -10,6 +12,6 @@ class Person : public AbstractClass, public Skeleton {
     }
     ~Person() { };
     void go(int i);
+    bool drink(std::string s);
     int eat();
-    bool drink();
 };

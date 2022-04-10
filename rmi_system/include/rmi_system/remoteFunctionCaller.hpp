@@ -183,7 +183,7 @@ template<typename T, typename... Tail>
 void convertParametersToJson(nlohmann::json& j, int& i, 
   T head, Tail... tail) {
     i++;
-    j[i] = head;
+    j[std::to_string(i)] = head;
     convertParametersToJson(j, i, tail...);
 }
 

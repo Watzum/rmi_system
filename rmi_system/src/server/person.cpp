@@ -1,6 +1,7 @@
 #include "person.h"
 
 #include <iostream>
+#include <string>
 
 using namespace std;
 
@@ -10,13 +11,13 @@ void Person::go(int i) {
 }
 
 
- int Person::eat() {
-    cout << "I am starting to eat!" << endl;
-    return 5;
+bool Person::drink(std::string s) {
+    cout << s << "! I am starting to drink!" << endl;
+    return true;
 }
 
 
-bool Person::drink() {
-    cout << "I am starting to drink!" << endl;
-    return true;
+ int Person::eat() {
+    cout << "! I am starting to eat!" << endl;
+    return 5;
 }
