@@ -1,5 +1,8 @@
 * Changelog
 ** [Unreleased]
+** [1.0.0] - 2022-04-10
+*** Added
+- GRPC-Bibliothek
 ** [0.5.0] - 2022-04-04
 *** Added
 - rmi_error Exception bei Fehlern bei der Übertragung
