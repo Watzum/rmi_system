@@ -23,6 +23,14 @@ class StatisticsManagerImpl final : public StatisticsManager::Service {
     grpc::Status GetFunctionNames(grpc::ServerContext* context, const ::google::protobuf::Empty* request,
                   FunctionNamesReply* reply) override;
 
+
+    void initializeCounter(std::string functionName) {
+      std::scoped_lock lck{mtx};
+      if (!callCounter.contains(functionName)) {
+        callCounter[functionName] = 0;
+      }
+    } 
+
     
     void incrementCounter(std::string functionName) {
       std::scoped_lock lck{mtx};

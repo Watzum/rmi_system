@@ -22,13 +22,9 @@ void Skeleton::startStatisticsManager() {
     grpc::ServerBuilder builder;
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);
-    // Finally assemble the server.
     std::unique_ptr<grpc::Server> s(builder.BuildAndStart());
     server.swap(s);
     spdlog::info("Server listening on " + server_address);
-
-    // Wait for the server to shutdown. Note that some other thread must be
-    // responsible for shutting down the server for this call to ever return.
     server->Wait();
 }
 

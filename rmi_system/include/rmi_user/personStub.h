@@ -12,8 +12,8 @@
 class PersonStub : public AbstractClass, public RemoteFunctionCaller {
   public:
 
-    void go(int i) {
-        __SEND_VOID_FUN__(i)
+    void go(int i, std::string s) {
+        __SEND_VOID_FUN__(i, s)
     }
 
 

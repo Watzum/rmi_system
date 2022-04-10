@@ -11,7 +11,7 @@ class Person : public AbstractClass, public Skeleton {
       listenToFunctionCalls();
     }
     ~Person() { };
-    void go(int i);
+    void go(int i, std::string s);
     bool drink(std::string s);
     int eat();
 };

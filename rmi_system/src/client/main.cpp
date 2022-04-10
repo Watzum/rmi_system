@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     PersonStub st;
     cout << st.drink("Hello!...") << endl;
     try {
-        st.go(5);
+        st.go(5, "Emil");
     } catch (std::exception& ex) {
         std::cout << ex.what() << std::endl;
     }
