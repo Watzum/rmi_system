@@ -66,14 +66,14 @@ void RemoteFunctionCaller::setEndpoint(std::string ip_address,
 RemoteFunctionCaller::RemoteFunctionCaller() 
   : stats_client(grpc::CreateChannel("127.0.0.1:50051", grpc::InsecureChannelCredentials())) {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
-    setEndpoint("127.0.0.1", 1113);
+    setEndpoint("127.0.0.1", 50113);
 }
 
 
 RemoteFunctionCaller::RemoteFunctionCaller(std::string dest_ip_address) 
   : stats_client(grpc::CreateChannel("127.0.0.1:50051", grpc::InsecureChannelCredentials())) {  
     GOOGLE_PROTOBUF_VERIFY_VERSION;
-    setEndpoint(dest_ip_address, 1113);
+    setEndpoint(dest_ip_address, 50113);
 }
 
 
