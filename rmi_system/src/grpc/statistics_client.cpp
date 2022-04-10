@@ -22,33 +22,33 @@
 
 #include <grpcpp/grpcpp.h>
 
-#include "build/grpc_client.p/greeter_server.grpc.pb.h"
+#include "build/grpc_client.p/statistics_server.grpc.pb.h"
 
 using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
-class GreeterClient {
+class StatisticsManagerClient {
  public:
-  GreeterClient(std::shared_ptr<Channel> channel)
-      : stub_(Greeter::NewStub(channel)) {}
+  StatisticsManagerClient(std::shared_ptr<Channel> channel)
+      : stub_(StatisticsManager::NewStub(channel)) {}
 
   // Assembles the client's payload, sends it and presents the response back
   // from the server.
-  std::string SayHello(const std::string& user) {
+  std::string GetStatistics(const std::string& user) {
     // Data we are sending to the server.
-    HelloRequest request;
+    StatsRequest request;
     request.set_name(user);
 
     // Container for the data we expect from the server.
-    HelloReply reply;
+    StatsReply reply;
 
     // Context for the client. It could be used to convey extra information to
     // the server and/or tweak certain RPC behaviors.
     ClientContext context;
 
     // The actual RPC.
-    Status status = stub_->SayHello(&context, request, &reply);
+    Status status = stub_->GetStatistics(&context, request, &reply);
 
     // Act upon its status.
     if (status.ok()) {
@@ -61,7 +61,7 @@ class GreeterClient {
   }
 
  private:
-  std::unique_ptr<Greeter::Stub> stub_;
+  std::unique_ptr<StatisticsManager::Stub> stub_;
 };
 
 int main(int argc, char** argv) {
@@ -91,10 +91,10 @@ int main(int argc, char** argv) {
   } else {
     target_str = "localhost:50051";
   }
-  GreeterClient greeter(
+  StatisticsManagerClient greeter(
       grpc::CreateChannel(target_str, grpc::InsecureChannelCredentials()));
-  std::string user("world");
-  std::string reply = greeter.SayHello(user);
-  std::cout << "Greeter received: " << reply << std::endl;
+  std::string user("asdf");
+  std::string reply = greeter.GetStatistics(user);
+  std::cout << "Counter received: " << reply << std::endl;
   return 0;
 }

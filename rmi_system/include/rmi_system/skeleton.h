@@ -2,6 +2,7 @@
 
 #include "abstractClass.h"
 #include "functioncall.pb.h"
+#include "statistics_manager_impl.h"
 
 #include <json.hpp>
 #include <asio.hpp>
@@ -15,6 +16,7 @@ class Skeleton {
     void setPort();
 
   private: 
+    void startStatisticsManager();
     void serveClient(asio::ip::tcp::socket&& sock);
     void answerClient(asio::ip::tcp::socket& sock, FunctionCall* f, 
       asio::error_code& ec);
@@ -22,6 +24,7 @@ class Skeleton {
     void printEndpoint();
     AbstractClass* rmi_object;
     asio::ip::tcp::endpoint my_endpoint;
+    StatisticsManagerImpl service;
 };
 
 //Für den Aufruf in abstractMethods.cpp

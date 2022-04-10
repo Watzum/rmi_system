@@ -24,7 +24,9 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 
-#include "build/grpc_server.p/greeter_server.grpc.pb.h"
+#include "build/server.p/statistics_server.grpc.pb.h"
+
+#include "statistics_manager_impl.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -32,19 +34,17 @@ using grpc::ServerContext;
 using grpc::Status;
 
 // Logic and data behind the server's behavior.
-class GreeterServiceImpl final : public Greeter::Service {
-  Status SayHello(ServerContext* context, const HelloRequest* request,
-                  HelloReply* reply) override {
-    context = context;
-    std::string prefix("Hello ");
-    reply->set_message(prefix + request->name());
-    return Status::OK;
-  }
-};
+Status StatisticsManagerImpl::GetStatistics(ServerContext* context, const StatsRequest* request,
+                StatsReply* reply) {
+  context = context;
+  int counter{getCounter(request->name())};
+  reply->set_message(request->name() + ": " + std::to_string(counter));
+  return Status::OK;
+}
 
-void RunServer() {
+/*void RunServer() {
   std::string server_address("0.0.0.0:50051");
-  GreeterServiceImpl service;
+  StatisticsManagerImpl service;
 
   grpc::EnableDefaultHealthCheckService(true);
   //grpc::reflection::InitProtoReflectionServerBuilderPlugin();
@@ -61,10 +61,10 @@ void RunServer() {
   // Wait for the server to shutdown. Note that some other thread must be
   // responsible for shutting down the server for this call to ever return.
   server->Wait();
-}
+}*/
 
-int main() { //int argc, char** argv
+/*int main() { //int argc, char** argv
   RunServer();
 
   return 0;
-}
+}*/

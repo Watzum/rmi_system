@@ -2,6 +2,7 @@
 #include "error_handler.h"
 #include "functioncall.pb.h"
 #include "returnvalue.pb.h"
+#include "statistics_manager_impl.h"
 
 #include <asio.hpp>
 #include <spdlog/spdlog.h>
@@ -12,6 +13,26 @@
 
 using namespace asio;
 namespace spd = spdlog;
+
+void Skeleton::startStatisticsManager() {
+    std::string server_address("0.0.0.0:50051");
+
+    grpc::EnableDefaultHealthCheckService(true);
+    //grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+    grpc::ServerBuilder builder;
+    // Listen on the given address without any authentication mechanism.
+    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    // Register "service" as the instance through which we'll communicate with
+    // clients. In this case it corresponds to an *synchronous* service.
+    builder.RegisterService(&service);
+    // Finally assemble the server.
+    std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+    std::cout << "Server listening on " << server_address << std::endl;
+
+    // Wait for the server to shutdown. Note that some other thread must be
+    // responsible for shutting down the server for this call to ever return.
+    server->Wait();
+}
 
 inline ip::tcp::acceptor setUpAcceptor(io_context& ctx,
   const ip::tcp::endpoint& ep, error_code& ec) {
@@ -44,6 +65,7 @@ void Skeleton::answerClient(ip::tcp::socket& sock, FunctionCall* d,
     nlohmann::json j = nlohmann::json::parse(d->json_arguments());
     //TODO: JSON Fehlerbehandlung!! -> z.B. type_error
     try {  
+        service.incrementCounter(d->name());
         std::string s{callFunction(d->name(), j)};
         returnValue->set_json_value(s);
     } catch (const std::exception& ex) {
@@ -117,10 +139,14 @@ void Skeleton::printEndpoint() {
 Skeleton::Skeleton(AbstractClass* a) 
   : rmi_object{a}, my_endpoint{ip::tcp::v4(), 1113} {
     printEndpoint();
+    std::thread t{&Skeleton::startStatisticsManager, this};
+    t.detach();
 }
 
 
 Skeleton::Skeleton(AbstractClass* a, unsigned short port) 
   : rmi_object{a}, my_endpoint{ip::tcp::v4(), port} {
     printEndpoint();
+    std::thread t{&Skeleton::startStatisticsManager, this};
+    t.detach();
 }
