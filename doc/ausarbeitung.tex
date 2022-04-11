@@ -18,7 +18,7 @@ basicstyle=\ttfamily,
 keywordstyle=\color{blue}\ttfamily,
 stringstyle=\color{red}\ttfamily,
 commentstyle=\color{gray}\ttfamily,
-tabsize=4
+tabsize=2
 }
 
 
@@ -49,7 +49,7 @@ tabsize=4
 \pagestyle{empty} 
 
 \title{Entwicklung eines Remote Method Invocation Systems}
-\author{Emil Watz, 5AHIF \protect\\Beispielnummer: 44 \protect\\Matrikelnummer: 20}
+\author{Emil Watz, 5AHIF \protect\\Beispielnummer: 44 \protect\\Matrikelnummer: 19}
 \maketitle
 \tableofcontents 
 \cleardoublepage 
@@ -227,7 +227,7 @@ template<typename T, typename... Tail>
 void convertParametersToJson(nlohmann::json& j, int& i, 
   T head, Tail... tail) {
     i++;
-    j[i] = head;
+    j[std::to_string(i)] = head;
     convertParametersToJson(j, i, tail...);
 }
 \end{lstlisting}
@@ -245,17 +245,22 @@ Diese Klasse ist für Deserialisierung des Funktionsaufrufes und Serialisierung 
 Für die Deserialisierung werden wieder Makros eingesetzt. Sie werden in der \texttt{skeleton.h}-Datei definiert. 
 
 \begin{lstlisting}
-//par => Json Objekt mit Parametern
-#define __PARAMETER__(type, place) 
-	par[#place].get<type>()
-#define __FUNCTION__(name, ...)  
-	if (functionName == #name)
-		j["returnValue"] = rmi_object->name(__VA_ARGS__);
+//Zeilenumbrueche damit die Zeile nicht zu lange ist
+#define __ARGUMENT__(type, place) par[#place].get<type>()
+
+#define __FUNCTION__(name, ...) 
+if (functionName == #name) {
+	service.incrementCounter(#name); 
+	j["returnValue"] = rmi_object->name(__VA_ARGS__);
+}
+
 #define __VOID_FUNCTION__(name, ...) 
-	if (functionName == #name)
-		rmi_object->name(__VA_ARGS__);
-#define __END__ 
-	return j.dump();
+if (functionName == #name) {
+	service.incrementCounter(#name); 
+	rmi_object->name(__VA_ARGS__);
+}
+
+#define __END__ return j.dump();
 \end{lstlisting}
 
 Es wird wieder zwischen Funktionen mit und ohne Rückgabewerten unterschieden. Jeder Parameter muss mit dem \texttt{\_\_PARAMETER\_\_}-Makro angegeben werden. Dabei muss der Typ und die Position des Parameters angegeben werden. Das ist notwendig, damit der Parameter an der richtigen Stelle und mit dem richtigen Datentypen aus dem Json-Objekt ausgelesen werden kann. Nachdem die Funktion ausgeführt wurde, wird ein neues Json-Objekt mit (oder ohne) dem Rückgabewert als String zurückgegeben. 
@@ -368,6 +373,78 @@ Im \texttt{error\_handler.h} sind (im Namespace \texttt{eclog}) Funktionen defin
 
 Wenn ein Fehler bei der Übertragung auftritt, wird der Fehlercode solange propagiert, bis er bei der \texttt{returnFunctionCall/sendFunctionCall}-Funktion ankommt. Dort wird die \texttt{rmi\_system\_error}-Exception geworfen. Dadurch wird dem Benutzer mitgeteilt, dass der Aufruf fehlgeschlagen ist. 
 
+\section{gPRC}
+
+Das RMI-System wurde durch einen Server erweitert, über den Statistiken abgefragt werden. Dieser wurde mittels gRPC implementiert.
+
+\subsection{Proto-Definition}
+
+Der RPC-Service wird via Protokoll Buffer in der \texttt{statistics\_server.proto}-Datei folgendermaßen definiert.
+
+\begin{lstlisting}
+service StatisticsManager {
+  rpc GetStatistics (StatsRequest) returns (StatsReply) {}
+  rpc GetFunctionNames (google.protobuf.Empty) 
+				returns (FunctionNamesReply) {}
+}
+
+message StatsRequest {
+  string function_name = 1;
+}
+
+message StatsReply {
+  int32 counter = 1;
+}
+
+message FunctionNamesReply {
+  string names = 1;
+}
+\end{lstlisting}
+
+Es wird ein StatisticsManager-Service definiert, der zwei Funktionen hat. GetStatistics hat den Parameter StatsRequest, der den Namen einer Funktion enthält. Die Funktion liefert die Anzahl der Aufrufe dieser Funktion zurück. Die Funktion GetFunctionNames hat keinen Parameter. In gRPC muss jede Funktion jedoch einen Parameter haben, weswegen hierfür der zur Verfügung gestellte Protokoll Buffer \texttt{google.protobuf.Empty} verwendet wird. Der Rückgabewert enthält die Namen aller Funktionen, die über das RMI-System aufgerufen werden können.
+
+\subsection{Umsetzung}
+
+Die durch gRPC generierten Klassen werden durch die Klassen \textbf{StatisticsManagerImpl} und \textbf{StatisticsManagerClient} erweitert. 
+
+\subsubsection{StatisticsManagerImpl}
+
+Diese Klasse stellt den gRPC-Server dar. Sie erbt von dem gRPC-generierten StatisticsManager::Service und implementiert die Methoden. 
+
+\begin{lstlisting}
+class StatisticsManagerImpl final : public StatisticsManager::Service {
+...
+  public: 
+    grpc::Status GetStatistics(grpc::ServerContext* context, 
+			const StatsRequest* request,
+			StatsReply* reply) override;
+    grpc::Status GetFunctionNames(grpc::ServerContext* context, 
+			const ::google::protobuf::Empty* request,
+      FunctionNamesReply* reply) override;
+...
+}
+\end{lstlisting}
+
+Die Skeleton-Klasse hat eine Instanz des StatisticsManagerImpl. In einem eigenen Thread wird in der Funktion \texttt{startStatisticsManager} ein Server mit dieser Instanz gestartet. Dabei wird der Port 50051 verwendet.
+
+\subsubsection{StatisticsManagerClient}
+
+Die Klasse ist ein Wrapper für den StatisticsManager::Stub. Sie hat ebenfalls die zwei gRPC-Funktionen, welche den Aufruf an den Stub weiterleiten. Dabei werden die Parameter in den entsprechenden Protokoll Buffer umgewandelt beziehungsweise der Returnwert aus dem Protokoll Buffer ausgelesen und zurückgegeben.
+
+\begin{lstlisting}
+class StatisticsManagerClient {
+  public: 
+    StatisticsManagerClient(std::shared_ptr<grpc::Channel> channel)
+      : stub_(StatisticsManager::NewStub(channel)) {}
+    int GetStatistics(const std::string&);
+    std::string GetFunctionNames();
+  private:
+    std::unique_ptr<StatisticsManager::Stub> stub_;
+};
+\end{lstlisting}
+
+Der Client kann diese über den RemoteFunctionCaller (und dadurch auch über den Stub) aufrufen. Der RemoteFunctionCaller hat eine Instanz des StatisticsManagerClient und ebenfalls die Funktionen \texttt{GetStatistics} und \texttt{GetFunctionNames}, die den Aufruf an die Instanz weiterleiten. 
+
 \chapter{Verwendung} \label{verwendung}
 
 In diesem Kapitel wird beschrieben, wie das RMI-System verwendet wird und wie es konfiguriert werden kann. 
@@ -382,12 +459,14 @@ Damit die Funktionen aufgerufen werden können, müssen diese in verschiedenen O
 
 
 \paragraph{AbstractClass} Diese muss in der \texttt{abstractClass.h}-Datei "`pure-virtual"' Funktionsdefinition enthalten. Beispiel: \ref{abstractClass}
-\paragraph{Server-Objekt} Das Server-Objekt muss von der AbstractClass und dem Skeleton erben und die Funktionen der AbstractClass überschreiben. Es kann sonst frei gestaltet werden. Wichtig ist, dass im Konstruktor der Skeleton-Konstruktor aufgerufen wird mit dem Pointer auf das aktuelle Objekt (\texttt{this}). 
+\paragraph{Server-Objekt} Das Server-Objekt muss von der AbstractClass und dem Skeleton erben und die Funktionen der AbstractClass überschreiben. Es kann sonst frei gestaltet werden. Wichtig ist, dass im Konstruktor der Skeleton-Konstruktor aufgerufen wird mit dem Pointer auf das aktuelle Objekt (\texttt{this}). Damit Anfragen des Clients vom Server verarbeitet werden, muss die Funktion \texttt{listenToFunctionCalls} des Skeletons aufgerufen werden. Diese Funktion horcht auf Anfragen auf dem \textbf{Port 50113}. Im folgenden Beispiel wird sie im Konstruktor von \texttt{Person} aufgerufen.
 
 \begin{lstlisting}
 class Person : public AbstractClass, public Skeleton {
   public:
-    Person() : Skeleton(this) { }
+    Person() : Skeleton(this) {
+      listenToFunctionCalls();
+    }
     ~Person() { };
     void go(int i);
     int eat();
@@ -395,7 +474,7 @@ class Person : public AbstractClass, public Skeleton {
 };
 \end{lstlisting}
 
-\paragraph{Client-Stub} Dieser sollte im \texttt{rmi\_user}-Ordner definiert werden. Die Klasse muss von der AbstractClass und dem RemoteFunctionCaller erben. Dabei muss jede Funktion definiert werden mit dem \_\_SEND\_FUN\_\_ oder \_\_SEND\_VOID\_FUN\_\_-Makro. Bei beiden müssen die Parameter angegeben werden, wobei bei dem ersten Makro noch der Rückgabewert als erstes Argument angegeben werden muss. 
+\paragraph{Client-Stub} Dieser sollte im \texttt{rmi\_user}-Ordner definiert werden. Die Klasse muss von der AbstractClass und dem RemoteFunctionCaller erben. Dabei muss jede Funktion definiert werden mit dem \texttt{\_\_SEND\_FUN\_\_} oder \texttt{\_\_SEND\_VOID\_FUN\_\_}-Makro. Bei beiden müssen die Parameter angegeben werden, wobei bei dem ersten Makro noch der Rückgabewert als erstes Argument angegeben werden muss. 
 
 \begin{lstlisting}
 class PersonStub : public AbstractClass, RemoteFunctionCaller {
@@ -414,6 +493,8 @@ class PersonStub : public AbstractClass, RemoteFunctionCaller {
 };
 \end{lstlisting}
 
+Beim Aufruf senden diese Funktionen eine Anfrage auf den \textbf{(TCP-)Port 50113 des lokalen Hosts}.
+
 Außerdem müssen dafür die \texttt{abstractClass.h} und \texttt{remoteFunctionCaller.hpp}-Dateien inkludiert werden. 
 
 \paragraph{Skeleton-Definitionen} \label{abstractMethods}
@@ -424,7 +505,7 @@ In der \texttt{abstractMethods}-Datei müssen die \texttt{\_\_FUNCTION\_\_} bezi
 std::string Skeleton::callFunction(const std::string functionName, 
   nlohmann::json par) {
     nlohmann::json j;
-    __VOID_FUNCTION__(go, __PARAMETER__(int, 1))
+    __VOID_FUNCTION__(go, __ARGUMENT__(int, 1))
     __FUNCTION__(drink)
     __FUNCTION__(eat)
     __END__
@@ -440,12 +521,11 @@ Usage: ./server [OPTIONS]
 
 Options:
   -h,--help                   Print this help message and exit
-  --server_port UINT          The TCP-port of the server
   --loglevel UINT             Log level: 0 = fatal, 1 = error,
                               2 = warning, 3 = info
 \end{lstlisting}
 
-Mit dem \texttt{loglevel} wird bestimmt, bis zu welcher Stufe Meldungen ausgegeben werden. Der Standardwert ist dabei 3. Der \texttt{server\_port} bestimmt auf welchem Port der Server anfragen annimmt. Der standardmäßige Port ist 1113.
+Mit dem \texttt{loglevel} wird bestimmt, bis zu welcher Stufe Meldungen ausgegeben werden. Der Standardwert ist dabei 3. 
 
 \begin{lstlisting}
 RMI Client
@@ -453,13 +533,11 @@ Usage: ./client [OPTIONS]
 
 Options:
   -h,--help                   Print this help message and exit
-  --server_address TEXT       The IP-address of the server
-  --server_port UINT          The TCP-port of the server
   --loglevel UINT             Log level: 0 = fatal, 1 = error,
                               2 = warning, 3 = info
 \end{lstlisting}
 
-Die Schnittstelle des Clients ist sehr ähnlich, nur kann auch noch die IP-Adresse des Servers angegeben werden. Standardmäßig ist diese auf "`127.0.0.1"' gesetzt. Der Port gibt an, an welchen Port des Servers die Nachrichten gesendet werden.
+Die Schnittstelle des Clients ist im Grunde ident mit der des Servers. 
 
 \addtocontents{toc}{\protect\vspace*{\baselineskip}}
 
